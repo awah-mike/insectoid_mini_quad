@@ -1,0 +1,521 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot name="insectoid_mini_quad">
+  <material name="base_gray">
+    <color rgba="0.7 0.7 0.7 1.0" />
+  </material>
+  <material name="coxa_blue">
+    <color rgba="0.1 0.35 0.95 1.0" />
+  </material>
+  <material name="femur_orange">
+    <color rgba="0.95 0.55 0.1 1.0" />
+  </material>
+  <material name="tibia_green">
+    <color rgba="0.1 0.75 0.35 1.0" />
+  </material>
+  <link name="base_link">
+    <inertial>
+      <origin xyz="-3.74148352e-08 -0.0335873321 -0.000500000024" rpy="0 0 0" />
+      <mass value="1.7466509123337282" />
+      <inertia ixx="1.973799511e-02" iyy="6.783734695e-03" izz="2.651910983e-02" ixy="1.186337684e-08" iyz="-0.000000000e+00" ixz="1.412592622e-21" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/base_link.stl" scale="1 1 1" />
+      </geometry>
+      <material name="base_gray" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/base_link.stl" scale="1 1 1" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="BR_coxa_1">
+    <inertial>
+      <origin xyz="0.0174724003 -0.0251881399 -0.0173084228" rpy="0 0 0" />
+      <mass value="0.2" />
+      <inertia ixx="1.431842143e-04" iyy="2.086968968e-04" izz="2.383329723e-04" ixy="8.639505712e-05" iyz="-4.726484745e-05" ixz="5.567881012e-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/BR_coxa_1.stl" scale="1 1 1" />
+      </geometry>
+      <material name="coxa_blue" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/BR_coxa_1.stl" scale="1 1 1" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="BR_femur_1">
+    <inertial>
+      <origin xyz="0.0399394064 -3.23031878e-09 0.0398861649" rpy="0 0 0" />
+      <mass value="0.4" />
+      <inertia ixx="2.237618991e-04" iyy="1.966979249e-03" izz="1.852818261e-03" ixy="1.455249086e-11" iyz="1.187388097e-11" ixz="-3.137347482e-04" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/BR_femur_1.stl" scale="1 1 1" />
+      </geometry>
+      <material name="femur_orange" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/BR_femur_1.stl" scale="1 1 1" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="BR_tibia_1">
+    <inertial>
+      <origin xyz="0.0286090859 -3.38812634e-09 -0.0386342352" rpy="0 0 0" />
+      <mass value="0.4" />
+      <inertia ixx="2.224036613e-04" iyy="1.433207648e-03" izz="1.318893181e-03" ixy="-1.903259057e-11" iyz="9.725077750e-12" ixz="2.391882391e-04" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/BR_tibia_1.stl" scale="1 1 1" />
+      </geometry>
+      <material name="tibia_green" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/BR_tibia_1.stl" scale="1 1 1" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="MR_coxa_1">
+    <inertial>
+      <origin xyz="0.0250332744 -0.017693334 -0.0173084474" rpy="0 0 0" />
+      <mass value="0.2" />
+      <inertia ixx="9.531375785e-05" iyy="2.565684740e-04" izz="2.383342142e-04" ixy="4.512598320e-05" iyz="-2.537076319e-05" ixz="6.848637326e-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/MR_coxa_1.stl" scale="1 1 1" />
+      </geometry>
+      <material name="coxa_blue" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/MR_coxa_1.stl" scale="1 1 1" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="MR_femur_1">
+    <inertial>
+      <origin xyz="0.0399498686 2.5652951e-09 0.0398905054" rpy="0 0 0" />
+      <mass value="0.4" />
+      <inertia ixx="2.237499291e-04" iyy="1.966992253e-03" izz="1.852817773e-03" ixy="-7.105018706e-12" iyz="-3.876899760e-12" ixz="-3.137581059e-04" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/MR_femur_1.stl" scale="1 1 1" />
+      </geometry>
+      <material name="femur_orange" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/MR_femur_1.stl" scale="1 1 1" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="MR_tibia_1">
+    <inertial>
+      <origin xyz="0.0286310756 1.21439141e-09 -0.038638294" rpy="0 0 0" />
+      <mass value="0.4" />
+      <inertia ixx="2.223598656e-04" iyy="1.433707112e-03" izz="1.319402314e-03" ixy="-1.985501408e-11" iyz="1.151099654e-11" ixz="2.392034435e-04" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/MR_tibia_1.stl" scale="1 1 1" />
+      </geometry>
+      <material name="tibia_green" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/MR_tibia_1.stl" scale="1 1 1" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="FR_coxa_1">
+    <inertial>
+      <origin xyz="0.0301651128 -0.00545606018 -0.0173083025" rpy="0 0 0" />
+      <mass value="0.2" />
+      <inertia ixx="8.954596894e-05" iyy="2.623350658e-04" izz="2.383333272e-04" ixy="-3.275702200e-05" iyz="5.949608964e-06" ixz="7.279175493e-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/FR_coxa_1.stl" scale="1 1 1" />
+      </geometry>
+      <material name="coxa_blue" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/FR_coxa_1.stl" scale="1 1 1" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="FR_femur_1">
+    <inertial>
+      <origin xyz="0.0399369142 -3.12524358e-09 0.0398875495" rpy="0 0 0" />
+      <mass value="0.4" />
+      <inertia ixx="2.237799607e-04" iyy="1.966936926e-03" izz="1.852751278e-03" ixy="3.121504789e-11" iyz="3.757924292e-12" ixz="-3.137846530e-04" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/FR_femur_1.stl" scale="1 1 1" />
+      </geometry>
+      <material name="femur_orange" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/FR_femur_1.stl" scale="1 1 1" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="FR_tibia_1">
+    <inertial>
+      <origin xyz="0.028611631 -2.94783833e-09 -0.0386333681" rpy="0 0 0" />
+      <mass value="0.4" />
+      <inertia ixx="2.223840208e-04" iyy="1.433231779e-03" izz="1.318930991e-03" ixy="-1.767018146e-11" iyz="8.693610382e-12" ixz="2.391527301e-04" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/FR_tibia_1.stl" scale="1 1 1" />
+      </geometry>
+      <material name="tibia_green" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/FR_tibia_1.stl" scale="1 1 1" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="FL_coxa_1">
+    <inertial>
+      <origin xyz="-0.0301601029 0.00548089471 0.0173635886" rpy="0 0 0" />
+      <mass value="0.2" />
+      <inertia ixx="8.981926071e-05" iyy="2.623460955e-04" izz="2.381311181e-04" ixy="-3.281304969e-05" iyz="5.908634275e-06" ixz="7.277343443e-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/FL_coxa_1.stl" scale="1 1 1" />
+      </geometry>
+      <material name="coxa_blue" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/FL_coxa_1.stl" scale="1 1 1" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="FL_femur_1">
+    <inertial>
+      <origin xyz="-0.0399455433 2.73232724e-09 -0.0398907692" rpy="0 0 0" />
+      <mass value="0.4" />
+      <inertia ixx="2.237657366e-04" iyy="1.967161376e-03" izz="1.852948377e-03" ixy="2.544489621e-11" iyz="1.439882005e-11" ixz="-3.138010244e-04" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/FL_femur_1.stl" scale="1 1 1" />
+      </geometry>
+      <material name="femur_orange" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/FL_femur_1.stl" scale="1 1 1" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="FL_tibia_1">
+    <inertial>
+      <origin xyz="-0.0286182111 3.26802245e-09 0.0386365045" rpy="0 0 0" />
+      <mass value="0.4" />
+      <inertia ixx="2.223718624e-04" iyy="1.433422814e-03" izz="1.319089614e-03" ixy="-1.514110976e-11" iyz="-4.145343711e-12" ixz="2.391718310e-04" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/FL_tibia_1.stl" scale="1 1 1" />
+      </geometry>
+      <material name="tibia_green" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/FL_tibia_1.stl" scale="1 1 1" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="ML_coxa_1">
+    <inertial>
+      <origin xyz="-0.0250041783 0.0176996033 0.0173077963" rpy="0 0 0" />
+      <mass value="0.2" />
+      <inertia ixx="9.525554860e-05" iyy="2.566037406e-04" izz="2.383926999e-04" ixy="4.504307076e-05" iyz="-2.535091201e-05" ixz="6.843876299e-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/ML_coxa_1.stl" scale="1 1 1" />
+      </geometry>
+      <material name="coxa_blue" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/ML_coxa_1.stl" scale="1 1 1" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="ML_femur_1">
+    <inertial>
+      <origin xyz="-0.0399498686 1.55668306e-09 -0.0398905056" rpy="0 0 0" />
+      <mass value="0.4" />
+      <inertia ixx="2.237499423e-04" iyy="1.966992345e-03" izz="1.852817858e-03" ixy="-1.460680668e-11" iyz="-5.168658529e-12" ixz="-3.137581028e-04" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/ML_femur_1.stl" scale="1 1 1" />
+      </geometry>
+      <material name="femur_orange" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/ML_femur_1.stl" scale="1 1 1" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="ML_tibia_1">
+    <inertial>
+      <origin xyz="-0.0286310742 2.62215454e-09 0.0386382944" rpy="0 0 0" />
+      <mass value="0.4" />
+      <inertia ixx="2.223598620e-04" iyy="1.433707024e-03" izz="1.319402234e-03" ixy="-7.533972858e-12" iyz="1.021659765e-11" ixz="2.392034275e-04" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/ML_tibia_1.stl" scale="1 1 1" />
+      </geometry>
+      <material name="tibia_green" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/ML_tibia_1.stl" scale="1 1 1" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="BL_coxa_1">
+    <inertial>
+      <origin xyz="-0.0174431819 0.0251841226 0.0173078081" rpy="0 0 0" />
+      <mass value="0.2" />
+      <inertia ixx="1.430844245e-04" iyy="2.087734003e-04" izz="2.383904692e-04" ixy="8.636172467e-05" iyz="-4.723015295e-05" ixz="5.564091896e-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/BL_coxa_1.stl" scale="1 1 1" />
+      </geometry>
+      <material name="coxa_blue" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/BL_coxa_1.stl" scale="1 1 1" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="BL_femur_1">
+    <inertial>
+      <origin xyz="-0.0399394055 2.31821789e-09 -0.0398861642" rpy="0 0 0" />
+      <mass value="0.4" />
+      <inertia ixx="2.237619015e-04" iyy="1.966979303e-03" izz="1.852818316e-03" ixy="2.263410033e-11" iyz="3.000234721e-12" ixz="-3.137347594e-04" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/BL_femur_1.stl" scale="1 1 1" />
+      </geometry>
+      <material name="femur_orange" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/BL_femur_1.stl" scale="1 1 1" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="BL_tibia_1">
+    <inertial>
+      <origin xyz="-0.0286090845 3.39374126e-09 0.0386342348" rpy="0 0 0" />
+      <mass value="0.4" />
+      <inertia ixx="2.224036571e-04" iyy="1.433207567e-03" izz="1.318893103e-03" ixy="-1.482401532e-11" iyz="1.522838837e-12" ixz="2.391882394e-04" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/BL_tibia_1.stl" scale="1 1 1" />
+      </geometry>
+      <material name="tibia_green" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes_local/BL_tibia_1.stl" scale="1 1 1" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="BR_coxa_joint" type="revolute">
+    <origin xyz="0.1 -0.2 -0.002" rpy="0 -0 0" />
+    <parent link="base_link" />
+    <child link="BR_coxa_1" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1.047198" upper="1.047198" effort="24.0" velocity="5.445427" />
+    <dynamics damping="0.1" friction="0.01" />
+  </joint>
+  <joint name="BR_femur_joint" type="revolute">
+    <origin xyz="0.052707 -0.045235 -0.0315" rpy="-1.57079633 -0 -0.349044398" />
+    <parent link="BR_coxa_1" />
+    <child link="BR_femur_1" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1.221730" upper="0.000000" effort="24.0" velocity="5.445427" />
+    <dynamics damping="0.1" friction="0.01" />
+  </joint>
+  <joint name="BR_tibia_joint" type="revolute">
+    <origin xyz="0.180001376 0 0.0499962435" rpy="0 1.5891251e-16 0" />
+    <parent link="BR_femur_1" />
+    <child link="BR_tibia_1" />
+    <axis xyz="0 0 1" />
+    <limit lower="0.000000" upper="2.617994" effort="24.0" velocity="5.445427" />
+    <dynamics damping="0.1" friction="0.01" />
+  </joint>
+  <joint name="MR_coxa_joint" type="revolute">
+    <origin xyz="0.1 0 -0.002" rpy="0 -0 0" />
+    <parent link="base_link" />
+    <child link="MR_coxa_1" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1.047198" upper="1.047198" effort="24.0" velocity="5.445427" />
+    <dynamics damping="0.1" friction="0.01" />
+  </joint>
+  <joint name="MR_femur_joint" type="revolute">
+    <origin xyz="0.065 -0.02448 -0.0315" rpy="-1.57079633 -0 0" />
+    <parent link="MR_coxa_1" />
+    <child link="MR_femur_1" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1.221730" upper="0.000000" effort="24.0" velocity="5.445427" />
+    <dynamics damping="0.1" friction="0.01" />
+  </joint>
+  <joint name="MR_tibia_joint" type="revolute">
+    <origin xyz="0.18 0 0.05" rpy="0 -0 0" />
+    <parent link="MR_femur_1" />
+    <child link="MR_tibia_1" />
+    <axis xyz="0 0 1" />
+    <limit lower="0.000000" upper="2.617994" effort="24.0" velocity="5.445427" />
+    <dynamics damping="0.1" friction="0.01" />
+  </joint>
+  <joint name="FR_coxa_joint" type="fixed">
+    <origin xyz="0.08 0.14 -0.002" rpy="0 -0 0.7853981634" />
+    <parent link="base_link" />
+    <child link="FR_coxa_1" />
+  </joint>
+  <joint name="FR_femur_joint" type="fixed">
+    <origin xyz="0.069256 0.005284 -0.0315" rpy="-1.57079633 -0 0.436319053" />
+    <parent link="FR_coxa_1" />
+    <child link="FR_femur_1" />
+  </joint>
+  <joint name="FR_tibia_joint" type="fixed">
+    <origin xyz="0.179998608 0 0.0500019802" rpy="0 -2.33756987e-17 0" />
+    <parent link="FR_femur_1" />
+    <child link="FR_tibia_1" />
+  </joint>
+  <joint name="FL_coxa_joint" type="fixed">
+    <origin xyz="-0.08 0.14 -0.002" rpy="3.141592651 2.538366994e-09 0.7853981634" />
+    <parent link="base_link" />
+    <child link="FL_coxa_1" />
+  </joint>
+  <joint name="FL_femur_joint" type="fixed">
+    <origin xyz="-0.069256 -0.005284 0.0315" rpy="-1.57079633 -0 0.436319053" />
+    <parent link="FL_coxa_1" />
+    <child link="FL_femur_1" />
+  </joint>
+  <joint name="FL_tibia_joint" type="fixed">
+    <origin xyz="-0.179998608 0 -0.0500019802" rpy="0 -2.33756987e-17 0" />
+    <parent link="FL_femur_1" />
+    <child link="FL_tibia_1" />
+  </joint>
+  <joint name="ML_coxa_joint" type="revolute">
+    <origin xyz="-0.1 0 -0.002" rpy="3.14159265 -0 0" />
+    <parent link="base_link" />
+    <child link="ML_coxa_1" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1.047198" upper="1.047198" effort="24.0" velocity="5.445427" />
+    <dynamics damping="0.1" friction="0.01" />
+  </joint>
+  <joint name="ML_femur_joint" type="revolute">
+    <origin xyz="-0.065 0.02448 0.0315" rpy="-1.57079633 -0 0" />
+    <parent link="ML_coxa_1" />
+    <child link="ML_femur_1" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1.221730" upper="0.000000" effort="24.0" velocity="5.445427" />
+    <dynamics damping="0.1" friction="0.01" />
+  </joint>
+  <joint name="ML_tibia_joint" type="revolute">
+    <origin xyz="-0.18 0 -0.05" rpy="0 -0 0" />
+    <parent link="ML_femur_1" />
+    <child link="ML_tibia_1" />
+    <axis xyz="0 0 1" />
+    <limit lower="0.000000" upper="2.617994" effort="24.0" velocity="5.445427" />
+    <dynamics damping="0.1" friction="0.01" />
+  </joint>
+  <joint name="BL_coxa_joint" type="revolute">
+    <origin xyz="-0.1 -0.2 -0.002" rpy="3.14159265 -0 0" />
+    <parent link="base_link" />
+    <child link="BL_coxa_1" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1.047198" upper="1.047198" effort="24.0" velocity="5.445427" />
+    <dynamics damping="0.1" friction="0.01" />
+  </joint>
+  <joint name="BL_femur_joint" type="revolute">
+    <origin xyz="-0.052707 0.045235 0.0315" rpy="-1.57079633 -0 -0.349044398" />
+    <parent link="BL_coxa_1" />
+    <child link="BL_femur_1" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1.221730" upper="0.000000" effort="24.0" velocity="5.445427" />
+    <dynamics damping="0.1" friction="0.01" />
+  </joint>
+  <joint name="BL_tibia_joint" type="revolute">
+    <origin xyz="-0.180001376 0 -0.0499962435" rpy="0 1.5891251e-16 0" />
+    <parent link="BL_femur_1" />
+    <child link="BL_tibia_1" />
+    <axis xyz="0 0 1" />
+    <limit lower="0.000000" upper="2.617994" effort="24.0" velocity="5.445427" />
+    <dynamics damping="0.1" friction="0.01" />
+  </joint>
+</robot>
