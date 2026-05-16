@@ -3,6 +3,70 @@
 This folder is a separate side project derived from `/workspace/insectoid_mini`.
 It is not part of the `insectoid_mini` git repo.
 
+## Current State As Of 2026-05-16
+
+This repo now contains both the quad robot asset and the current Isaac Lab
+DirectRL package.
+
+Important paths:
+
+- Robot asset: `URDF_description/usd/insectoid_mini_quad.usd`
+- RL package: `rl/`
+- Full experiment progress log: `rl/PROGRESS_LOG.md`
+- Best checkpoints/videos/evals: `trained_models/`
+
+Install the RL package from this repo:
+
+```bash
+/workspace/isaaclab/isaaclab.sh -p -m pip install -e /workspace/insectoid_mini_quad/rl
+```
+
+Registered Gym tasks:
+
+- `Isaac-InsectoidMiniQuad-Flat-Direct-v0`
+- `Isaac-InsectoidMiniQuad-Flat-Direct-Play-v0`
+
+Best model checkpoints:
+
+- Main forward baseline: `trained_models/forward_strict_best/model_1399.pt`
+  - strict score: `TASK_SCORE=0.9211`
+  - source run: `2026-05-14_23-32-36_step_height_test_from_stride_best_200`
+- Forward visual high-step benchmark:
+  `trained_models/forward_visual_high_step/model_1558.pt`
+  - strict score: `TASK_SCORE=0.8751`
+  - useful for comparing clearer swing lift
+- Best reverse smoke-test checkpoint:
+  `trained_models/reverse_straighter_best/model_1779.pt`
+  - strict reverse score: `TASK_SCORE=0.5555`
+  - reverse command: `Y=-0.30 m/s`
+
+The best forward checkpoint number is **`model_1399.pt`**. If a future session
+needs a single policy to start from, use that one.
+
+Recent important engineering decisions:
+
+- The four walking feet are fixed spherical foot bodies:
+  `BL_FOOT`, `BR_FOOT`, `ML_FOOT`, `MR_FOOT`.
+- Contact metrics and rewards should use the spherical feet, not tibia bodies.
+- Front legs are fixed swept-forward arms, not locomotion legs.
+- Current policy observation is 60D and includes simulator base linear velocity.
+  For real onboard deployment without motion capture, the next major training
+  variant should remove base linear velocity from the policy observation while
+  still using simulator velocity in the reward/evaluator.
+- A direct action-remapping attempt to reverse the forward policy was tested and
+  then removed. It did not recover good reverse walking. Continue with trained
+  reverse or bidirectional policies instead.
+
+Recommended next step:
+
+1. Create a deployable forward policy variant that removes `root_lin_vel_b`
+   from the policy observation.
+2. Keep true simulator base velocity in the reward/evaluator.
+3. Train with IMU-realistic observations: angular velocity, projected gravity,
+   joint positions, joint velocities, previous actions, foot contacts, and
+   stance/swing timers.
+4. Compare it against `model_1399.pt` and `model_1558.pt`.
+
 ## Purpose
 
 `insectoid_mini_quad` is a four-walking-leg variant of the insectoid mini robot.
@@ -40,7 +104,7 @@ Important conversion choices:
 
 Body/link count:
 
-- 19 rigid bodies total.
+- 23 rigid bodies total.
 - `base_link`
 - Six complete leg link sets:
   - `FL_coxa_1`, `FL_femur_1`, `FL_tibia_1`
@@ -49,8 +113,10 @@ Body/link count:
   - `MR_coxa_1`, `MR_femur_1`, `MR_tibia_1`
   - `BL_coxa_1`, `BL_femur_1`, `BL_tibia_1`
   - `BR_coxa_1`, `BR_femur_1`, `BR_tibia_1`
+- Four fixed spherical walking foot links:
+  - `BL_FOOT`, `BR_FOOT`, `ML_FOOT`, `MR_FOOT`
 
-Fixed front-arm joints:
+Fixed joints:
 
 - `FL_coxa_joint`
 - `FL_femur_joint`
@@ -58,15 +124,18 @@ Fixed front-arm joints:
 - `FR_coxa_joint`
 - `FR_femur_joint`
 - `FR_tibia_joint`
+- `BL_foot_fixed_joint`
+- `BR_foot_fixed_joint`
+- `ML_foot_fixed_joint`
+- `MR_foot_fixed_joint`
 
-The front coxa joints are baked to a 45 degree forward sweep:
+The front coxa joints are baked to a 60 degree sweep:
 
-- `FR_coxa_joint`: `+45 deg` local coxa rotation.
-- `FL_coxa_joint`: `-45 deg` local coxa rotation.
+- `FR_coxa_joint`: `+60 deg` local coxa rotation.
+- `FL_coxa_joint`: `+60 deg` local coxa rotation.
 
-The opposite local signs are intentional. The left front coxa frame is flipped
-relative to the right front coxa frame, so opposite local signs produce the same
-physical forward sweep toward the robot's +Y direction.
+The front-left coxa was corrected by +90 deg from the earlier generated asset,
+then both front coxas were advanced by another +15 deg after visual validation.
 
 Front femur and tibia joints are fixed at their URDF zero angles. These front
 legs are therefore rigid structures, not controllable walking legs.
@@ -142,16 +211,19 @@ For a new Dr. Eureka/Isaac Lab project:
   standing convention.
 - Actuate only the 12 middle/rear walking joints listed above.
 - Do not include front-leg fixed joints in the action set.
-- Foot/contact bodies should be the four walking tibias:
-  - `BL_tibia_1`, `BR_tibia_1`, `ML_tibia_1`, `MR_tibia_1`
+- Foot/contact bodies should be the four fixed spherical foot links:
+  - `BL_FOOT`, `BR_FOOT`, `ML_FOOT`, `MR_FOOT`
+- Treat tibia links as shanks/non-foot bodies. If a tibia contacts the ground,
+  that is an undesired contact rather than a valid foot plant.
 
 The old six-leg DirectRL task uses +Y as the natural forward axis. Preserve
 that convention unless the new task explicitly changes it.
 
-For default joint targets on the four walking legs, start from the current mini
-standing convention:
+For default joint targets on the four walking legs, use the visually approved
+quad stance:
 
-- coxa: `0 rad`
+- middle coxa (`ML_coxa_joint`, `MR_coxa_joint`): `+30 deg` (`0.523599 rad`)
+- rear coxa (`BL_coxa_joint`, `BR_coxa_joint`): `-20 deg` (`-0.349066 rad`)
 - femur: `-25 deg` (`-0.436332 rad`)
 - tibia: `+110 deg` (`1.919862 rad`)
 
@@ -178,9 +250,9 @@ TERM=xterm /workspace/isaaclab/isaaclab.sh -p scripts/verify_quad_usd.py --headl
 Expected summary:
 
 ```text
-BODIES 19 [...]
+BODIES 23 [...]
 REVOLUTE_JOINTS 12 [...]
-FIXED_JOINTS 6 ['FL_coxa_joint', 'FL_femur_joint', 'FL_tibia_joint', 'FR_coxa_joint', 'FR_femur_joint', 'FR_tibia_joint']
+FIXED_JOINTS 10 [...]
 QUAD_USD_OK
 ```
 
@@ -194,6 +266,10 @@ for training is `URDF_quad.urdf` and the generated USD, not the full source copy
 
 # Dr. Eureka Bringup Guide For A New Session
 
+Historical note: this section was written during bringup and includes some old
+reward-shaping ideas. The checked-in code under `rl/` and the "Current State"
+section above are authoritative for the current DirectRL setup.
+
 This section is written for a fresh LLM/Codex session on a new Brev/Isaac box.
 The goal is to make the new `insectoid_mini_quad` robot trainable with the same
 Isaac Lab + Dr. Eureka pattern used for `/workspace/insectoid_mini`.
@@ -204,7 +280,6 @@ Expected local paths:
 
 - Isaac Lab launcher: `/workspace/isaaclab/isaaclab.sh`
 - Dr. Eureka repo: `/workspace/GRAM_DrEureka`
-- Six-leg reference repo: `/workspace/insectoid_mini`
 - Quad side project: `/workspace/insectoid_mini_quad`
 
 If the Dr. Eureka repo is missing, clone and install:
@@ -216,12 +291,10 @@ cd /workspace/GRAM_DrEureka
 /workspace/isaaclab/isaaclab.sh -p -m pip install -e source/isaaclab_eureka
 ```
 
-The quad task should be implemented as its own Isaac Lab Python package, not
-inside `/workspace/insectoid_mini`, to avoid mixing projects. A reasonable name
-is `insectoid_mini_quad_rl`, with files mirroring the six-leg package:
+The quad task is checked into this repo as its own Isaac Lab Python package:
 
 ```text
-/workspace/insectoid_mini_quad_rl/
+/workspace/insectoid_mini_quad/rl/
 ├── pyproject.toml
 └── insectoid_mini_quad_rl/
     ├── __init__.py
@@ -235,7 +308,7 @@ is `insectoid_mini_quad_rl`, with files mirroring the six-leg package:
 Install editably:
 
 ```bash
-/workspace/isaaclab/isaaclab.sh -p -m pip install -e /workspace/insectoid_mini_quad_rl
+/workspace/isaaclab/isaaclab.sh -p -m pip install -e /workspace/insectoid_mini_quad/rl
 ```
 
 Then verify Gym registration:
@@ -291,10 +364,10 @@ Suggested initial state:
 
 ```python
 INSECTOID_MINI_QUAD_STANDING_POSE = {
-    "ML_coxa_joint": 0.0,
-    "MR_coxa_joint": 0.0,
-    "BL_coxa_joint": 0.0,
-    "BR_coxa_joint": 0.0,
+    "ML_coxa_joint": math.radians(30.0),
+    "MR_coxa_joint": math.radians(30.0),
+    "BL_coxa_joint": math.radians(-20.0),
+    "BR_coxa_joint": math.radians(-20.0),
     "ML_femur_joint": math.radians(-25.0),
     "MR_femur_joint": math.radians(-25.0),
     "BL_femur_joint": math.radians(-25.0),
@@ -360,19 +433,19 @@ rel_standing_envs = 0.1
 For the first quad runs, consider keeping `lin_vel_y_range = (0.15, 0.25)` if
 it falls too often. Once it stands and steps, return to `(0.2, 0.3)`.
 
-Contact bodies for rewards and success metrics should be only the four walking
-tibias:
+Contact bodies for rewards and success metrics should be only the four spherical
+walking feet:
 
 ```python
-FOOT_BODY_NAMES = ("BL_tibia_1", "BR_tibia_1", "ML_tibia_1", "MR_tibia_1")
-TIBIA_BODY_PATTERN = "BL_tibia_1|BR_tibia_1|ML_tibia_1|MR_tibia_1"
-NON_FOOT_BODY_PATTERN = "base_link|.*_coxa_1|.*_femur_1|FL_tibia_1|FR_tibia_1"
+FOOT_BODY_NAMES = ("BL_FOOT", "BR_FOOT", "ML_FOOT", "MR_FOOT")
+FOOT_BODY_PATTERN = "BL_FOOT|BR_FOOT|ML_FOOT|MR_FOOT"
+NON_FOOT_BODY_PATTERN = "base_link|.*_coxa_1|.*_femur_1|.*_tibia_1"
 ```
 
 Important: the front tibias exist but are fixed suspended arms. Do not count
 `FL_tibia_1` or `FR_tibia_1` as feet for walking contact rewards. Treat contact
-on the front arms as undesired unless intentionally studying payload-arm
-grounding.
+on any tibia or front arm as undesired unless intentionally studying
+payload-arm grounding.
 
 Recommended observation vector:
 
@@ -381,17 +454,19 @@ root_lin_vel_b:        3
 root_ang_vel_b:        3
 projected_gravity_b:   3
 commands:              3
-gait_clock:            2
 joint_pos_rel:        12
 joint_vel:            12
 actions:              12
 foot_contacts:         4
-total:                54
+stance_time_clipped:   4
+swing_time_clipped:    4
+total:                60
 ```
 
-If also including previous actions, total becomes `66`. The six-leg task used
-current actions only in observation and previous actions internally for action
-rate.
+This keeps the simple ANYmal-C proprioceptive core and adds contact-aware
+timing inputs for the four spherical feet. The contact and clipped stance/swing
+timers help the policy distinguish planted support from swing and reduce rapid
+tap contacts.
 
 Termination conditions from the six-leg task are good starting points:
 
@@ -678,8 +753,8 @@ Suggested task description:
 ```python
 INSECTOID_MINI_QUAD_DESC = (
     "Task: make the insectoid_mini_quad robot track body-frame planar velocity and yaw-rate commands on flat terrain. "
-    "This is a 19-link robot with four actuated walking legs and two fixed front legs. "
-    "The front legs are full rigid chains swept forward by 45 degrees and should behave like suspended arms/payload structure, "
+    "This is a 23-body robot with four actuated walking legs, four fixed spherical foot links, and two fixed front legs. "
+    "The front legs are full rigid chains swept forward by 60 degrees and should behave like suspended arms/payload structure, "
     "not walking supports. The middle and rear legs provide locomotion. A successful policy walks at the commanded velocity "
     "without base contact, excessive crouch, dragging the front arms, or a static standing solution.\\n\\n"
     "CURRENT ISAAC LAB TASK API:\\n"
@@ -691,19 +766,19 @@ INSECTOID_MINI_QUAD_DESC = (
     "- self._robot.data.applied_torque, joint_acc, joint_pos, joint_vel are all (num_envs, 12) for the actuated walking joints.\\n"
     "- self._actions and self._previous_actions are (num_envs, 12).\\n"
     "- self._contact_sensor.data.net_forces_w_history is (num_envs, history_len, num_bodies, 3).\\n"
-    "- self._feet_ids indexes only the four walking tibias [BL_tibia_1, BR_tibia_1, ML_tibia_1, MR_tibia_1].\\n"
+    "- self._feet_ids indexes only the four spherical walking feet [BL_FOOT, BR_FOOT, ML_FOOT, MR_FOOT].\\n"
     "- self._base_id indexes base_link.\\n\\n"
     "ROBOT SETUP:\\n"
     "- Active walking joints are ML/MR/BL/BR coxa/femur/tibia: 12 actions.\\n"
-    "- Fixed front joints are FL/FR coxa/femur/tibia. Front coxas are baked at a 45 degree forward sweep.\\n"
-    "- Walking standing pose: coxa=0 deg, femur=-25 deg, tibia=+110 deg.\\n"
+    "- Fixed front joints are FL/FR coxa/femur/tibia. Front coxas are baked at a 60 degree forward sweep.\\n"
+    "- Walking standing pose: ML/MR coxa=+30 deg, BL/BR coxa=-20 deg, femur=-25 deg, tibia=+110 deg.\\n"
     "- Joint limits: coxa +/-60 deg, femur [-70, 0] deg, tibia [0, 150] deg.\\n"
     "- Actuator model: CubeMars AK45-36 KV80, peak torque 24 Nm, continuous threshold 8 Nm, runtime velocity cap 3 rad/s, "
     "reflected armature about 0.0236 kg*m^2, stiffness 40, damping 1.\\n\\n"
     "REWARD DESIGN PRIOR:\\n"
     "- Main objective: dense planar velocity tracking and yaw-rate tracking while alive and upright.\\n"
     "- Penalize vertical velocity, roll/pitch angular velocity, tilt, base contact, front-arm ground contact, excessive torque, joint acceleration, and action-rate spikes.\\n"
-    "- Use the four walking tibia contacts for gait shaping. Do not include the fixed front tibias as feet.\\n"
+    "- Use the four spherical foot contacts for gait shaping. Do not include tibia links or fixed front arms as feet.\\n"
     "- A diagonal trot prior is useful: pair A [BL, MR], pair B [BR, ML]. Encourage one pair to stance/anchor while the other pair swings, then alternate.\\n"
     "- Keep gait timing soft. Never prescribe joint angles, overwrite actions, or reward clock phase alone.\\n"
     "- Primary footfall objective: stance anchoring. When a walking tibia touches down, its world XY position should stay nearly fixed until liftoff.\\n"

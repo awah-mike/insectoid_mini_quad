@@ -1,0 +1,601 @@
+# Insectoid Mini Quad Locomotion Progress
+
+## 2026-05-14
+
+### Run Ranking
+- Rank 1 / current best overall: Stride reward push from direct PPO best
+  - Run: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_23-17-12_stride_reward_push_from_best_300`
+  - Checkpoint: `model_1200.pt`
+  - Video: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_23-17-12_stride_reward_push_from_best_300/videos/play/rl-video-step-0.mp4`
+  - Strict evaluator: `TASK_SCORE=0.9155`
+  - Why it is top: best strict score so far, slightly longer latest touchdown stride than the previous direct-PPO best, better contact balance, and forward speed remains strong at the `0.30 m/s` command.
+- Rank 2: Direct PPO 4096-env baseline
+  - Run: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_21-56-58_direct_ppo_4096_strict_eval_seed42`
+  - Checkpoint: `model_999.pt`
+  - Video: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_21-56-58_direct_ppo_4096_strict_eval_seed42/videos/play/rl-video-step-0.mp4`
+  - Strict evaluator: `TASK_SCORE=0.8549`
+  - User assessment: this is the best run so far and should be ranked above all previous runs.
+  - Why it remains important: clean contacts, low rapid tapping, much better stance duration, strong torso posture, and forward speed close to the `0.30 m/s` command.
+- Rank 3: Contact-aware stride timing run
+  - Run: `/workspace/insectoid_mini_quad_rl/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_21-03-15_contact_obs_stride_timing_120`
+  - Checkpoint: `model_119.pt`
+  - Strict evaluator: `TASK_SCORE=0.7834`
+  - Why it is third: strong forward movement and visually promising stride, but more rapid tapping/contact imbalance than the top direct PPO runs.
+- Rank 4: Earlier stride/drag pass 2 artifact
+  - Run: `/workspace/insectoid_mini_quad_rl/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_05-40-49_stride_drag_pass_2`
+  - Checkpoint: `model_277.pt`
+  - Why it is fourth: useful stride-improvement artifact, but it predates the contact-aware/evaluator improvements and is weaker than the later policies.
+
+### Baseline PPO Smoke
+- Run: `/workspace/insectoid_mini_quad_rl/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_05-26-57`
+- Checkpoint: `model_79.pt`
+- Video: `videos/play/rl-video-step-0.mp4`
+- Result: learned forward tracking at smoke-test level.
+- Evaluation at command `+Y=0.28 m/s`, 4 envs x 100 steps:
+  - mean forward velocity: `0.2856 m/s`
+  - mean absolute lateral velocity: `0.0406 m/s`
+  - mean absolute yaw rate: `0.1723 rad/s`
+  - mean projected gravity XY norm: `0.1362`
+  - resets: `1`
+- Issue found: stride is visually short. Reward did not strongly require coxa sweep or long touchdown-to-touchdown steps.
+
+### Stride And Drag Reward Pass
+- Goal: increase stride length through larger coxa sweep and reduce dragging by penalizing stance slip and swing-foot scraping.
+- Changes:
+  - Increased coxa action scale from global `0.35 rad` to coxa-specific `0.55 rad`.
+  - Raised coxa stride target from `0.40 rad` to `0.58 rad`.
+  - Added coxa sweep reward/underuse terms based on deviation from default coxa pose.
+  - Increased touchdown stride target from `0.13 m` to `0.18 m`.
+  - Fixed touchdown stride accounting so the first touchdown from zero does not create a false long stride.
+  - Increased stance anchor/slip penalties.
+  - Added explicit swing-ground-drag penalty and swing-clearance reward.
+  - Enabled stance foot velocity penalty so planted feet are encouraged to stay fixed.
+
+### Stride/Drag Pass 1
+- Run: `/workspace/insectoid_mini_quad_rl/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_05-37-17_stride_drag_pass_1`
+- Started from: `2026-05-14_05-26-57/model_79.pt`
+- Checkpoint: `model_178.pt`
+- Video: `videos/play/rl-video-step-0.mp4`
+- Training result: mean reward reached `74.55`; full-length episodes; no base-fall terminations in the final training logs.
+- Evaluation at command `+Y=0.28 m/s`, 4 envs x 250 steps:
+  - mean forward velocity: `0.2929 m/s`
+  - mean absolute lateral velocity: `0.0344 m/s`
+  - mean absolute yaw rate: `0.1353 rad/s`
+  - mean projected gravity XY norm: `0.0918`
+  - latest touchdown stride: `0.0898 m`
+  - stance foot XY speed: `0.1375 m/s`
+  - low swing foot speed: `0.0000 m/s`
+  - resets: `0`
+- Comparison to baseline with same metrics:
+  - Baseline latest touchdown stride: `0.1011 m`; pass 1 reduced stride.
+  - Baseline stance foot XY speed: `0.1810 m/s`; pass 1 reduced planted-foot sliding.
+  - Baseline yaw/tilt were worse: yaw `0.1704 rad/s`, projected gravity XY `0.1265`.
+- Decision: keep no-drag/slip shaping, but increase coxa authority and stride reward for pass 2.
+
+### Stride/Drag Pass 2 Setup
+- Increased coxa action scale to `0.65 rad`.
+- Raised coxa span target to `0.70 rad`.
+- Raised coxa sweep target to `0.48 rad`.
+- Increased touchdown stride reward and short-stride penalty.
+- Increased stance anchor, foot slip, and stance foot velocity penalties.
+- Reduced action-rate penalty slightly so coxa sweep is less suppressed.
+
+### Stride/Drag Pass 2
+- Run: `/workspace/insectoid_mini_quad_rl/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_05-40-49_stride_drag_pass_2`
+- Started from: `2026-05-14_05-37-17_stride_drag_pass_1/model_178.pt`
+- Primary checkpoint: `model_277.pt`
+- Video: `videos/play/rl-video-step-0.mp4`
+- Training result: mean reward reached `84.99`; full-length episodes; no base-fall terminations in final training logs.
+- Evaluation for `model_277.pt` at command `+Y=0.28 m/s`, 4 envs x 250 steps:
+  - mean forward velocity: `0.2817 m/s`
+  - mean absolute lateral velocity: `0.0411 m/s`
+  - mean absolute yaw rate: `0.1370 rad/s`
+  - mean projected gravity XY norm: `0.0801`
+  - latest touchdown stride: `0.1144 m`
+  - stance foot XY speed: `0.1319 m/s`
+  - low swing foot speed: `0.0000 m/s`
+  - resets: `1`
+- Mid-run checkpoint check: `model_250.pt`
+  - latest touchdown stride: `0.0945 m`
+  - stance foot XY speed: `0.1302 m/s`
+  - projected gravity XY norm: `0.0751`
+  - resets: `0`
+- Decision: `model_277.pt` is the best stride-improvement artifact so far. It improves latest touchdown stride over
+  baseline (`0.1144 m` vs `0.1011 m`) and reduces planted-foot sliding (`0.1319 m/s` vs `0.1810 m/s`), but it is not
+  final because a small reset count remains and base height is lower.
+
+### Dr. Eureka Context Update
+- Updated Dr. Eureka task description for the mini quad to emphasize:
+  - coxa-driven long stride,
+  - touchdown-to-touchdown stride length,
+  - stance-foot anchoring,
+  - swing-foot clearance,
+  - no tibia scraping or planted-foot sliding.
+- Updated the mini-quad success metric to include straight +Y velocity tracking, lateral/yaw suppression, torso
+  flatness, episode survival, and minimum touchdown stride.
+
+### ANYmal-C Style Reward Reset
+- Simplified `direct_env.py` back to the classical Rudin/ANYmal-C locomotion reward family: planar velocity tracking, yaw-rate tracking, z-velocity penalty, roll/pitch angular velocity penalty, torque penalty, joint-acceleration penalty, action-rate penalty, feet-air-time, undesired contacts, and flat orientation.
+- Removed explicit reward terms for clocked trot timing, coxa sweep, coxa stride, touchdown stride, stance-anchor slip, swing-ground drag, swing clearance, short stance/swing, action saturation, torque-over-continuous, and survival bonus. Footfall stride state is retained only for diagnostics/evaluation.
+- Changed policy observations to the ANYmal-style 48D proprioceptive vector: base linear/angular velocity, projected gravity, commands, joint position offsets, joint velocities, and previous/current actions. Removed gait clock and foot-contact observation.
+- Changed training scene default from 1024 envs at 1.5 m spacing to 4096 envs at 4.0 m spacing. A 4096-env smoke run completed successfully at about 94k sim steps/s collection throughput.
+- Changed velocity tracking denominator from strict `0.06` to ANYmal-style `0.25`, and reset reward weights to the direct ANYmal-C scale family.
+
+### Spherical Foot Colliders
+- Updated `/workspace/insectoid_mini_quad/scripts/make_quad_urdf.py` to add fixed spherical foot links `BL_FOOT`, `BR_FOOT`, `ML_FOOT`, and `MR_FOOT` at the ends of the four walking tibias. Radius is `0.018 m`, mass is `0.02 kg`.
+- Regenerated `/workspace/insectoid_mini_quad/URDF_description/urdf/URDF_quad.urdf` and `/workspace/insectoid_mini_quad/URDF_description/usd/insectoid_mini_quad.usd`.
+- Updated contact tracking so `_feet_ids` uses the four spherical foot bodies. The tibia links are now non-foot bodies and count as undesired contacts if they hit the ground.
+- Verification: USD reports 23 bodies including all four foot bodies, 12 revolute walking joints, and 10 fixed joints. Default stance check showed all four spherical feet in contact.
+- Smoke artifacts: `/workspace/insectoid_mini_quad_rl/outputs/stance_foot_spheres_smoke/insectoid_mini_quad_stance_initial.png`, `/workspace/insectoid_mini_quad_rl/outputs/stance_foot_spheres_smoke/insectoid_mini_quad_stance_final.png`, and `/workspace/insectoid_mini_quad_rl/outputs/stance_foot_spheres_smoke/insectoid_mini_quad_stance.mp4`.
+
+### Success Metric And Diagnostic Feedback Update
+- Confirmed the spherical foot bodies are not part of the 48D policy observation. This is intentional: the policy observes proprioception like ANYmal-C, while rewards/metrics can still read contact sensor state and internal diagnostic buffers.
+- Added episode-average diagnostic buffers to `direct_env.py`: average +Y forward velocity, average lateral drift, yaw rate, tilt, base height, foot contact count, touchdown rate, and undesired non-foot contact count.
+- Updated the Dr. Eureka mini-quad success metric to score episode-average behavior instead of only final instantaneous state. It now combines forward command tracking, lateral/yaw suppression, healthy height, upright torso, enough spherical-foot contact, nonzero touchdown activity, no tibia/body/front-arm contact, and survival.
+- Updated prompt/task context to tell the LLM that task_score reflects these diagnostics, so rising reward with bad foot/contact metrics should be treated as reward hacking.
+- Verification: metric expression evaluated inside a live Isaac env and returned a scalar. A 256-env PPO smoke run logged the new Episode_Metric values successfully.
+
+### Former Best: Contact-Aware Stride Timing Run
+- User assessment at the time: this was the best run so far. It is now ranked second behind the direct PPO 4096-env baseline.
+- Run: `/workspace/insectoid_mini_quad_rl/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_21-03-15_contact_obs_stride_timing_120`
+- Checkpoint: `model_119.pt`
+- Video: `videos/play/rl-video-step-0.mp4`
+- Eval: `eval_0p30_800.txt`
+- Key setup:
+  - Policy observation increased from 48D to 60D.
+  - Added four spherical-foot contact flags, four clipped stance timers, and four clipped swing timers to the policy observation.
+  - Strengthened feet-air-time, planted-foot slip, and near-ground swing drag terms.
+  - Added touchdown stride reward plus short-stance and short-swing penalties to discourage rapid tapping and encourage a foot to stay planted through a meaningful body advance.
+- Evaluation at command `+Y=0.30 m/s`, 64 envs x 800 steps:
+  - mean forward velocity: `0.3482 m/s`
+  - mean absolute lateral velocity: `0.0497 m/s`
+  - mean absolute yaw rate: `0.1270 rad/s`
+  - mean projected gravity XY norm: `0.0330`
+  - projected gravity Y: `0.0049`
+  - base height: `0.2299 m`
+  - stride EMA: `0.0847 m`
+  - latest touchdown stride: `0.0944 m`
+  - stance foot XY speed: `0.0760 m/s`
+  - low swing foot XY speed: `0.1856 m/s`
+  - low swing fraction: `0.0659`
+  - foot contact count: `1.7137`
+  - touchdown rate: `16.5664 Hz`
+  - undesired contact count: `0.0032`
+  - resets: `53`
+- Comparison to previous tuned run `2026-05-14_20-20-09_reward_tune_pitch_drag_support_100/model_99.pt`:
+  - forward speed improved from `0.2101` to `0.3482 m/s`
+  - latest touchdown stride improved from `0.0664` to `0.0944 m`
+  - stance foot slip improved from `0.1671` to `0.0760 m/s`
+  - low swing speed improved from `0.2690` to `0.1856 m/s`
+  - low swing fraction improved from `0.1294` to `0.0659`
+  - torso tilt stayed good: `0.0361` to `0.0330`
+- Remaining issues:
+  - Rear-left foot is still underused: `BL_FOOT_CONTACT_FRACTION=0.1723`.
+  - Resets remain high at `53`.
+  - Forward speed overshoots the `0.30 m/s` eval command, so the next pass should tighten velocity tracking without weakening the improved stride/contact timing.
+
+### Eureka Evaluator Upgrade: Stride/Posture/Clean Contact/Symmetry
+- Added first-class evaluator buffers in `direct_env.py` for the metrics we want Eureka to see:
+  - per-foot contact fraction,
+  - per-foot touchdown rate,
+  - per-foot stride EMA,
+  - per-foot stance slip,
+  - per-foot low-swing drag,
+  - completed stance/swing duration.
+- Updated the mini-quad Eureka success metric and prompt context so the LLM is judged on:
+  - +Y velocity tracking, lateral drift, yaw drift,
+  - torso posture via projected-gravity tilt and base height,
+  - stride quality via touchdown stride and completed stance duration,
+  - contact cleanliness via stance slip, low-swing drag, excessive rapid tapping, and undesired contacts,
+  - symmetry/leg usage via per-foot contact fraction and per-foot touchdown-rate balance.
+- Updated `scripts/evaluate_rsl_rl.py` to report the same evaluator terms and a composite `TASK_SCORE`.
+- Baseline on current best run `2026-05-14_21-03-15_contact_obs_stride_timing_120/model_119.pt`, command `+Y=0.30 m/s`, 64 envs x 800 steps:
+  - `TASK_SCORE=0.7827`
+  - `SCORE_TRACKING=0.7579`
+  - `SCORE_POSTURE=0.9945`
+  - `SCORE_GAIT=0.6434`
+  - `SCORE_STRIDE=0.7225`
+  - `SCORE_STANCE_DURATION=0.1852`
+  - `SCORE_RAPID_TAP=0.5466`
+  - `SCORE_CONTACT_BALANCE=0.3061`
+  - `SCORE_LOW_SWING_DRAG=0.4318`
+- Interpretation: the best policy is now correctly recognized as promising but incomplete. The evaluator rewards its strong posture and useful stride, while exposing short stance duration, rapid contacts, contact imbalance, and swing/drag cleanliness as the main next targets.
+
+### Short Eureka Smoke Test After Evaluator Upgrade
+- Ran a short IsaacLabEureka smoke on `Isaac-InsectoidMiniQuad-Flat-Direct-v0` with:
+  - `EUREKA_NUM_ENVS=512`
+  - `num_parallel_runs=1`
+  - `max_eureka_iterations=2`
+  - `max_training_iterations=35`
+  - `gpt_model=gpt-5.4`
+- Two earlier one-iteration launch attempts were useful validator checks but did not train:
+  - first reward returned a `(num_envs, 4)` component by dividing scalar accumulators by per-foot `self._step_counts`,
+  - second reward returned `(num_envs, num_envs)` because `all_contact[:, self._base_id]` kept a singleton dimension.
+- Fixed the prompt/task guidance to explicitly require per-foot reductions and `self._base_id[0]` or singleton reduction for base contact.
+- The 2-iteration smoke then trained successfully end-to-end.
+- Eureka internal result:
+  - Iteration 0 max task score: about `0.29`
+  - Iteration 1 selected final success metric: `0.2920`
+  - Reward correlation with oracle reward was strongly negative (`-0.99` range), indicating reward hacking/misalignment.
+  - The generated reward kept increasing while task score stayed around `0.25-0.29`.
+- Standalone evaluator on selected checkpoint:
+  - Checkpoint: `/workspace/GRAM_DrEureka/logs/rl_runs/rsl_rl_eureka/insectoid_mini_quad_flat/2026-05-14_21-33-41_Run-0/model_34.pt`
+  - Eval file: `/workspace/GRAM_DrEureka/logs/rl_runs/rsl_rl_eureka/insectoid_mini_quad_flat/2026-05-14_21-33-41_Run-0/eval_eureka_metrics_0p30_800.txt`
+  - `TASK_SCORE=0.4307`
+  - mean forward velocity: `0.0190 m/s` under `+Y=0.30 m/s`
+  - mean projected gravity XY norm: `0.2091`
+  - stride EMA: `0.0034 m`
+  - latest touchdown stride: `0.0072 m`
+  - completed stance duration: `0.0185 s`
+  - contact balance score: `0.0000`
+  - `BL_FOOT_CONTACT_FRACTION=0.0025`, `BR_FOOT_CONTACT_FRACTION=0.0043`, `ML_FOOT_CONTACT_FRACTION=0.9931`, `MR_FOOT_CONTACT_FRACTION=0.9911`
+- Interpretation: the current Eureka smoke discovered a middle-feet statue/crouch, not locomotion. The evaluator correctly penalizes the failure through low velocity, zero stride score, zero stance-duration score, and zero contact-balance score. Do not scale this reward to a full run.
+
+### Strict Velocity-Gated Eureka Smoke
+- Tightened the Eureka evaluator and prompt after the middle-feet statue failure:
+  - added `SCORE_FORWARD_PROGRESS_GATE`, which drives total `TASK_SCORE` near zero when commanded forward velocity is below about `0.08 m/s`;
+  - made the middle-feet statue/crouch failure explicit in the task description and prompt;
+  - instructed Eureka to reduce or gate reward terms when generated reward rises but `task_score` stays flat or falls.
+- Rechecked the current hand-tuned best under the stricter evaluator:
+  - Checkpoint: `/workspace/insectoid_mini_quad_rl/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_21-03-15_contact_obs_stride_timing_120/model_119.pt`
+  - Eval file: `/workspace/insectoid_mini_quad_rl/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_21-03-15_contact_obs_stride_timing_120/eval_strict_eureka_metrics_0p30_800.txt`
+  - `TASK_SCORE=0.7834`
+  - `MEAN_FORWARD_VEL_Y_MPS=0.3486`
+  - `SCORE_FORWARD_PROGRESS_GATE=1.0000`
+  - `SCORE_TRACKING=0.7587`
+  - `SCORE_POSTURE=0.9946`
+  - `SCORE_GAIT=0.6446`
+  - `SCORE_STRIDE=0.7256`
+  - `SCORE_STANCE_DURATION=0.1919`
+  - `SCORE_RAPID_TAP=0.5550`
+  - `SCORE_CONTACT_BALANCE=0.3083`
+- Rechecked the previous Eureka middle-feet statue checkpoint under the stricter evaluator:
+  - Checkpoint: `/workspace/GRAM_DrEureka/logs/rl_runs/rsl_rl_eureka/insectoid_mini_quad_flat/2026-05-14_21-33-41_Run-0/model_34.pt`
+  - Eval file: `/workspace/GRAM_DrEureka/logs/rl_runs/rsl_rl_eureka/insectoid_mini_quad_flat/2026-05-14_21-33-41_Run-0/eval_strict_eureka_metrics_0p30_800.txt`
+  - `TASK_SCORE=0.0000`
+  - `MEAN_FORWARD_VEL_Y_MPS=0.0196`
+  - `SCORE_FORWARD_PROGRESS_GATE=0.0000`
+  - contact pattern remained the bad statue: BL/BR near zero contact, ML/MR near one contact.
+- Ran another short Eureka smoke:
+  - `EUREKA_NUM_ENVS=512`
+  - `num_parallel_runs=1`
+  - `max_eureka_iterations=3`
+  - `max_training_iterations=50`
+  - `gpt_model=gpt-5.4`
+  - Eureka log: `/workspace/GRAM_DrEureka/logs/eureka/Isaac-InsectoidMiniQuad-Flat-Direct-v0/2026-05-14_21-45-42`
+- Eureka internal final result:
+  - selected success metric: `0.02498`
+  - reward correlation improved to positive by iteration 2 (`0.9584`), but the selected candidate was still far below the hand-tuned policy.
+- Standalone strict evaluator on the selected final checkpoint:
+  - Checkpoint: `/workspace/GRAM_DrEureka/logs/rl_runs/rsl_rl_eureka/insectoid_mini_quad_flat/2026-05-14_21-48-51_Run-0/model_49.pt`
+  - Eval file: `/workspace/GRAM_DrEureka/logs/rl_runs/rsl_rl_eureka/insectoid_mini_quad_flat/2026-05-14_21-48-51_Run-0/eval_strict_eureka_metrics_0p30_800.txt`
+  - Video: `/workspace/GRAM_DrEureka/logs/rl_runs/rsl_rl_eureka/insectoid_mini_quad_flat/2026-05-14_21-48-51_Run-0/videos/play/rl-video-step-0.mp4`
+  - `TASK_SCORE=0.5611`
+  - `MEAN_FORWARD_VEL_Y_MPS=0.3325`
+  - `MEAN_PROJECTED_GRAVITY_XY_NORM=0.1083`
+  - `MEAN_BASE_HEIGHT_M=0.1589`
+  - `MEAN_STRIDE_EMA_M=0.0134`
+  - `MEAN_LATEST_TOUCHDOWN_STRIDE_M=0.0331`
+  - `MEAN_COMPLETED_STANCE_DURATION_S=0.0287`
+  - `MEAN_TOUCHDOWN_RATE_HZ=22.3447`
+  - `SCORE_STRIDE=0.0000`
+  - `SCORE_STANCE_DURATION=0.0000`
+  - `SCORE_RAPID_TAP=0.0512`
+  - `SCORE_CONTACT_BALANCE=0.2089`
+  - `RESETS=949`
+- Interpretation:
+  - The stricter evaluator now rejects the old statue failure correctly.
+  - The new Eureka candidate learned to move forward, but it does so through short, rapid, unstable contacts with many resets and essentially no accepted stride/stance-duration score.
+  - This is not ready for a full Eureka scale-up. The pragmatic next step is to seed Eureka from the current hand-tuned reward scaffold instead of asking it to invent a reward from scratch, then use the strict evaluator to accept only candidates that beat or closely approach the current `0.7834` baseline.
+
+### Direct PPO 4096-Env Baseline: Current Best Overall
+- Ran a single direct RSL-RL PPO job with no Eureka:
+  - task: `Isaac-InsectoidMiniQuad-Flat-Direct-v0`
+  - envs: `4096`
+  - iterations: `1000`
+  - run: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_21-56-58_direct_ppo_4096_strict_eval_seed42`
+  - final checkpoint: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_21-56-58_direct_ppo_4096_strict_eval_seed42/model_999.pt`
+- Standalone strict evaluator at `+Y=0.30 m/s`, 64 envs x 800 steps:
+  - eval file: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_21-56-58_direct_ppo_4096_strict_eval_seed42/eval_strict_0p30_800.txt`
+  - video: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_21-56-58_direct_ppo_4096_strict_eval_seed42/videos/play/rl-video-step-0.mp4`
+  - `TASK_SCORE=0.8549`
+  - `MEAN_FORWARD_VEL_Y_MPS=0.2875`
+  - `SCORE_FORWARD_PROGRESS_GATE=0.9432`
+  - `SCORE_TRACKING=0.8755`
+  - `SCORE_POSTURE=0.9970`
+  - `SCORE_GAIT=0.8772`
+  - `SCORE_STRIDE=0.9129`
+  - `SCORE_STANCE_DURATION=0.7432`
+  - `SCORE_RAPID_TAP=0.9399`
+  - `SCORE_CONTACT_BALANCE=0.5896`
+  - `SCORE_TOUCHDOWN_BALANCE=0.9989`
+  - `SCORE_STANCE_SLIP=0.9748`
+  - `SCORE_LOW_SWING_DRAG=0.8634`
+  - `RESETS=54`
+- Comparison to previous best `2026-05-14_21-03-15_contact_obs_stride_timing_120/model_119.pt`:
+  - strict `TASK_SCORE` improved from `0.7834` to `0.8549`;
+  - forward velocity is slightly lower (`0.3486 -> 0.2875 m/s`) but much closer to the `0.30 m/s` command;
+  - gait/contact scores improved strongly (`SCORE_GAIT 0.6446 -> 0.8772`, `SCORE_RAPID_TAP 0.5550 -> 0.9399`);
+  - stance slip and low-swing drag are much cleaner;
+  - remaining issue is contact asymmetry: ML still carries more support than the other feet, and BL is still the lightest support foot.
+- Interpretation:
+  - This is the current best policy by both strict evaluator score and user visual assessment.
+  - The right next step is visual review of the video, then a targeted reward/config pass for contact symmetry and slightly stronger commanded-speed tracking without losing the improved clean-contact gait.
+
+### Stride Reward Push From Current Best: New Best Overall
+- Goal: increase stride length without breaking the clean-contact gait from the 4096-env direct PPO baseline.
+- Reward/config change in `direct_env.py`:
+  - `touchdown_stride_reward_scale`: `1.5 -> 2.2`
+  - `min_touchdown_stride`: `0.04 -> 0.05 m`
+  - `touchdown_stride_target`: `0.10 -> 0.14 m`
+- Training:
+  - started from `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_21-56-58_direct_ppo_4096_strict_eval_seed42/model_999.pt`
+  - resumed PPO for 300 more iterations
+  - run: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_23-17-12_stride_reward_push_from_best_300`
+- Final checkpoint check:
+  - checkpoint: `model_1298.pt`
+  - eval file: `eval_strict_0p30_800.txt`
+  - `TASK_SCORE=0.9149`
+  - `MEAN_FORWARD_VEL_Y_MPS=0.3250`
+  - `MEAN_LATEST_TOUCHDOWN_STRIDE_M=0.1090`
+  - `MEAN_STANCE_FOOT_XY_SPEED_MPS=0.0311`
+  - `SCORE_STRIDE=0.9340`
+  - `SCORE_CONTACT_BALANCE=0.6762`
+  - `RESETS=44`
+- Best checkpoint from this run:
+  - checkpoint: `model_1200.pt`
+  - eval file: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_23-17-12_stride_reward_push_from_best_300/eval_model_1200_strict_0p30_800.txt`
+  - video: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_23-17-12_stride_reward_push_from_best_300/videos/play/rl-video-step-0.mp4`
+  - `TASK_SCORE=0.9155`
+  - `MEAN_FORWARD_VEL_Y_MPS=0.3200`
+  - `MEAN_ABS_LATERAL_VEL_X_MPS=0.0478`
+  - `MEAN_ABS_YAW_RATE_RADPS=0.0553`
+  - `MEAN_PROJECTED_GRAVITY_XY_NORM=0.0234`
+  - `MEAN_STRIDE_EMA_M=0.0983`
+  - `MEAN_LATEST_TOUCHDOWN_STRIDE_M=0.1129`
+  - `MEAN_COMPLETED_STANCE_DURATION_S=0.1392`
+  - `MEAN_STANCE_FOOT_XY_SPEED_MPS=0.0356`
+  - `MEAN_LOW_SWING_FOOT_XY_SPEED_MPS=0.0839`
+  - `CONTACT_FRACTION_IMBALANCE=0.0879`
+  - `TOUCHDOWN_RATE_IMBALANCE_HZ=0.0895`
+  - `SCORE_STRIDE=0.9720`
+  - `SCORE_STANCE_DURATION=0.6603`
+  - `SCORE_RAPID_TAP=0.9049`
+  - `SCORE_CONTACT_BALANCE=0.6797`
+  - `SCORE_TOUCHDOWN_BALANCE=0.9980`
+  - `RESETS=46`
+- Comparison to previous direct PPO best `2026-05-14_21-56-58_direct_ppo_4096_strict_eval_seed42/model_999.pt`:
+  - strict `TASK_SCORE`: `0.8549 -> 0.9155`
+  - forward velocity: `0.2875 -> 0.3200 m/s`
+  - latest touchdown stride: `0.1116 -> 0.1129 m`
+  - stride EMA: `0.0948 -> 0.0983 m`
+  - contact imbalance: `0.1028 -> 0.0879`
+  - touchdown-rate imbalance: `0.0656 -> 0.0895 Hz` (slightly worse but still excellent)
+  - stance foot slip: `0.0319 -> 0.0356 m/s` (slightly worse but still clean)
+  - resets: `54 -> 46`
+- Interpretation:
+  - The stride reward push did not create a huge stride-length jump, but it produced a small stride improvement and a clear overall strict-score improvement.
+  - The best artifact is `model_1200.pt`, not the final `model_1298.pt`.
+  - This is now the top-ranked run. Remaining weakness is still ML over-support and higher ML low-swing drag.
+
+### Step Height Reward Test From Current Best
+- Goal: test whether explicitly rewarding swing-foot lift makes the stride visually clearer.
+- Revertible reward/config change in `direct_env.py`:
+  - added `swing_height_reward_scale = 0.35`
+  - added `swing_height_min = 0.025 m`
+  - added `swing_height_target = 0.055 m`
+  - added bounded `swing_height` reward, active only while moving and only for feet not in contact.
+  - To revert, remove the three config values, the `swing_height` episode-sum key, the swing-height computation block, and the `swing_height` reward entry.
+- Training:
+  - started from previous best checkpoint `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_23-17-12_stride_reward_push_from_best_300/model_1200.pt`
+  - resumed PPO for 200 more iterations with 4096 environments
+  - run: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_23-32-36_step_height_test_from_stride_best_200`
+  - note: the first launch from `/isaac-sim` failed before training because resume log resolution pointed at `/isaac-sim/logs`; the successful run was launched from `/workspace`.
+- Final checkpoint:
+  - checkpoint: `model_1399.pt`
+  - eval file: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_23-32-36_step_height_test_from_stride_best_200/eval_model_1399_strict_0p30_800.txt`
+  - video: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_23-32-36_step_height_test_from_stride_best_200/videos/play/rl-video-step-0.mp4`
+  - `TASK_SCORE=0.9211`
+  - `MEAN_FORWARD_VEL_Y_MPS=0.3016`
+  - `MEAN_ABS_LATERAL_VEL_X_MPS=0.0386`
+  - `MEAN_ABS_YAW_RATE_RADPS=0.0812`
+  - `MEAN_PROJECTED_GRAVITY_XY_NORM=0.0186`
+  - `MEAN_STRIDE_EMA_M=0.0950`
+  - `MEAN_LATEST_TOUCHDOWN_STRIDE_M=0.1118`
+  - `MEAN_COMPLETED_STANCE_DURATION_S=0.1485`
+  - `MEAN_STANCE_FOOT_XY_SPEED_MPS=0.0429`
+  - `MEAN_LOW_SWING_FOOT_XY_SPEED_MPS=0.0799`
+  - `MEAN_LOW_SWING_FRACTION=0.0508`
+  - `CONTACT_FRACTION_IMBALANCE=0.0872`
+  - `TOUCHDOWN_RATE_IMBALANCE_HZ=0.1689`
+  - `SCORE_STRIDE=0.9161`
+  - `SCORE_STANCE_DURATION=0.7377`
+  - `SCORE_RAPID_TAP=0.9034`
+  - `SCORE_CONTACT_BALANCE=0.6838`
+  - `SCORE_STANCE_SLIP=0.9550`
+  - `SCORE_LOW_SWING_DRAG=0.8525`
+  - `RESETS=55`
+- Comparison to previous top run `2026-05-14_23-17-12_stride_reward_push_from_best_300/model_1200.pt`:
+  - strict `TASK_SCORE`: `0.9155 -> 0.9211`
+  - forward velocity: `0.3200 -> 0.3016 m/s`, closer to the `0.30 m/s` command
+  - latest touchdown stride: `0.1129 -> 0.1118 m`, effectively unchanged
+  - stride EMA: `0.0983 -> 0.0950 m`, slightly lower
+  - stance duration: `0.1392 -> 0.1485 s`, improved
+  - stance foot slip: `0.0356 -> 0.0429 m/s`, worse
+  - low-swing foot speed: `0.0839 -> 0.0799 m/s`, slightly improved
+  - touchdown-rate imbalance: `0.0895 -> 0.1689 Hz`, worse but still modest
+- Interpretation:
+  - This is a good experimental candidate and slightly improves the strict evaluator score, mainly through better speed tracking/posture and longer stance duration.
+  - It does not clearly increase measured stride length versus the previous best.
+  - The added step-height reward appears safe at this scale, but the user should visually inspect the MP4 before promoting it above the previous top run because stance slip and touchdown balance regressed slightly.
+
+### Higher Step Height Reward Test
+- Goal: make the feet visibly lift higher above the ground.
+- Reward/config change in `direct_env.py`:
+  - `swing_height_reward_scale`: `0.35 -> 0.70`
+  - `swing_height_min`: `0.025 -> 0.030 m`
+  - `swing_height_target`: `0.055 -> 0.075 m`
+- Training:
+  - started from `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_23-32-36_step_height_test_from_stride_best_200/model_1399.pt`
+  - resumed PPO for 160 more iterations with 4096 environments
+  - run: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-15_18-58-07_higher_step_height_from_best_160`
+- Final checkpoint:
+  - checkpoint: `model_1558.pt`
+  - eval file: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-15_18-58-07_higher_step_height_from_best_160/eval_model_1558_strict_0p30_800.txt`
+  - video: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-15_18-58-07_higher_step_height_from_best_160/videos/play/rl-video-step-0.mp4`
+  - `TASK_SCORE=0.8751`
+  - `MEAN_FORWARD_VEL_Y_MPS=0.3222`
+  - `MEAN_ABS_LATERAL_VEL_X_MPS=0.0656`
+  - `MEAN_ABS_YAW_RATE_RADPS=0.0775`
+  - `MEAN_PROJECTED_GRAVITY_XY_NORM=0.0299`
+  - `MEAN_STRIDE_EMA_M=0.0989`
+  - `MEAN_LATEST_TOUCHDOWN_STRIDE_M=0.1151`
+  - `MEAN_COMPLETED_STANCE_DURATION_S=0.1312`
+  - `MEAN_STANCE_FOOT_XY_SPEED_MPS=0.0383`
+  - `MEAN_LOW_SWING_FOOT_XY_SPEED_MPS=0.0559`
+  - `MEAN_LOW_SWING_FRACTION=0.0367`
+  - `CONTACT_FRACTION_IMBALANCE=0.0900`
+  - `TOUCHDOWN_RATE_IMBALANCE_HZ=0.3591`
+  - `SCORE_STRIDE=0.9814`
+  - `SCORE_STANCE_DURATION=0.5933`
+  - `SCORE_RAPID_TAP=0.9084`
+  - `SCORE_CONTACT_BALANCE=0.6667`
+  - `SCORE_STANCE_SLIP=0.9639`
+  - `SCORE_LOW_SWING_DRAG=0.9249`
+  - `RESETS=52`
+- Comparison to current top run `2026-05-14_23-32-36_step_height_test_from_stride_best_200/model_1399.pt`:
+  - strict `TASK_SCORE`: `0.9211 -> 0.8751`
+  - forward velocity: `0.3016 -> 0.3222 m/s`
+  - lateral velocity: `0.0386 -> 0.0656 m/s`, worse
+  - latest touchdown stride: `0.1118 -> 0.1151 m`, slightly better
+  - low-swing fraction: `0.0508 -> 0.0367`, better
+  - low-swing drag score: `0.8525 -> 0.9249`, better
+  - touchdown-rate imbalance: `0.1689 -> 0.3591 Hz`, worse
+  - stance duration score: `0.7377 -> 0.5933`, worse
+- Interpretation:
+  - Benchmark status: keep this as the "higher step-height visual benchmark" even though its strict score is below the current top policy.
+  - Contact-sequence analysis at `+Y=0.30 m/s`:
+    - file: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-15_18-58-07_higher_step_height_from_best_160/contact_sequence_model_1558_0p30.txt`
+    - dominant touchdown pattern: front left -> back right -> front right -> back left.
+    - dominant contact states alternate between diagonal pairs: front left + back right, then front right + back left.
+  - This achieved the intended direction of cleaner/higher swing behavior by reducing low-swing fraction and low-swing drag.
+  - It should not replace the current top policy yet because tracking, lateral drift, stance duration, and touchdown balance regressed.
+  - Use the video as a visual reference for how much foot lift is desirable, then consider a milder setting such as `swing_height_reward_scale=0.50` and `swing_height_target=0.065 m`.
+
+### Reverse Motion Probe From Higher Step-Height Benchmark
+- Goal: test whether the higher step-height policy can respond to a negative-Y velocity command without retraining.
+- Checkpoint: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-15_18-58-07_higher_step_height_from_best_160/model_1558.pt`
+- Command: `Y=-0.30 m/s`
+- Artifacts:
+  - eval file: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-15_18-58-07_higher_step_height_from_best_160/eval_model_1558_reverse_y_neg0p30_800.txt`
+  - video: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-15_18-58-07_higher_step_height_from_best_160/videos/reverse_y_neg0p30/rl-video-step-0.mp4`
+  - contact sequence: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-15_18-58-07_higher_step_height_from_best_160/contact_sequence_model_1558_reverse_y_neg0p30.txt`
+- Result:
+  - `TASK_SCORE=0.0000`
+  - `MEAN_FORWARD_VEL_Y_MPS=0.0382`, so the robot did not reverse; it mostly stalled or drifted slightly forward.
+  - `SCORE_VELOCITY=0.0573`
+  - `MEAN_STRIDE_EMA_M=0.0316`
+  - `MEAN_LATEST_TOUCHDOWN_STRIDE_M=0.0366`
+  - `CONTACT_FRACTION_IMBALANCE=0.2974`
+  - `RESETS=48`
+- Contact interpretation:
+  - reverse command produced an irregular/stalled contact pattern rather than a clean reversed gait.
+  - most common contact state was `1011` in `BL,BR,ML,MR` order, meaning back left + front left + front right in contact, with back right often unloaded.
+  - touchdown counts were uneven: `BL=8`, `BR=8`, `ML=17`, `MR=10`.
+- Decision:
+  - This forward-trained policy should not be expected to generalize to reverse walking.
+  - Next reverse-motion step should be training with symmetric command sampling, e.g. `lin_vel_y_range=(-0.35, 0.35)`, and a direction-aware evaluator/reward gate.
+
+### Reverse Motion Training From Higher Step-Height Benchmark
+- Goal: continue from the higher step-height visual benchmark and teach negative-Y locomotion.
+- Starting checkpoint: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-15_18-58-07_higher_step_height_from_best_160/model_1558.pt`
+- Code/setup changes:
+  - `evaluate_rsl_rl.py`: made the forward-progress gate command-direction aware, so negative-Y command success is measured as negative-Y body velocity.
+  - `direct_env.py`: added optional `command_progress_reward_scale`, defaulting to `0.0` so existing forward baselines are unchanged unless explicitly enabled.
+  - `train_rsl_rl_reset_std.py`: added a resume wrapper that can reset the policy action standard deviation to restore exploration after resuming a converged checkpoint.
+  - `play_command_range_rsl_rl.py`: added fixed command playback with named video output folders.
+- Failed attempts:
+  - `2026-05-15_19-57-34_reverse_y_only_from_high_step_120`: reverse-only continuation without restored exploration. Eval stayed near stationary, `MEAN_FORWARD_VEL_Y_MPS=+0.0036`.
+  - `2026-05-15_20-01-04_reverse_y_directional_reward_from_high_step_120`: added command-progress reward and stronger velocity tracking, but still without enough exploration. Eval stayed near stationary, `MEAN_FORWARD_VEL_Y_MPS=+0.0004`.
+- Successful smoke-test run:
+  - run: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-15_20-04-16_reverse_y_high_explore_directional_160`
+  - training changes: reset action std to `0.8`, reverse command range `[-0.35, -0.20]`, `lin_vel_reward_scale=8.0`, `lin_vel_tracking_sigma=0.03`, `command_progress_reward_scale=8.0`, `swing_height_reward_scale=0.05`, `entropy_coef=0.02`.
+  - selected checkpoint: `model_1700.pt`, chosen over final `model_1717.pt` because it had slightly better strict reverse score and lower low-swing drag.
+  - eval file: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-15_20-04-16_reverse_y_high_explore_directional_160/eval_model_1700_reverse_y_neg0p30_800.txt`
+  - video: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-15_20-04-16_reverse_y_high_explore_directional_160/videos/reverse_y_neg0p30_model_1700/rl-video-step-0.mp4`
+  - contact sequence: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-15_20-04-16_reverse_y_high_explore_directional_160/contact_sequence_model_1700_reverse_y_neg0p30.txt`
+- Metrics for selected checkpoint at `Y=-0.30 m/s`:
+  - `TASK_SCORE=0.4077`
+  - `MEAN_FORWARD_VEL_Y_MPS=-0.3249`
+  - `MEAN_ABS_LATERAL_VEL_X_MPS=0.0528`
+  - `MEAN_ABS_YAW_RATE_RADPS=0.8293`
+  - `MEAN_PROJECTED_GRAVITY_XY_NORM=0.0702`
+  - `MEAN_BASE_HEIGHT_M=0.2067`
+  - `MEAN_STRIDE_EMA_M=0.0967`
+  - `MEAN_LATEST_TOUCHDOWN_STRIDE_M=0.1243`
+  - `MEAN_STANCE_FOOT_XY_SPEED_MPS=0.0948`
+  - `MEAN_LOW_SWING_FOOT_XY_SPEED_MPS=0.1842`
+  - `MEAN_LOW_SWING_FRACTION=0.0710`
+  - `MEAN_TOUCHDOWN_RATE_HZ=17.3064`
+  - `SCORE_VELOCITY=0.9898`
+  - `SCORE_TRACKING=0.0024`
+  - `SCORE_STRIDE=0.9456`
+  - `SCORE_RAPID_TAP=0.4574`
+  - `SCORE_STANCE_SLIP=0.7987`
+  - `SCORE_LOW_SWING_DRAG=0.4283`
+- Contact interpretation:
+  - It now truly reverses at roughly target speed.
+  - The gait is still rough: high yaw rate, many rapid contacts, short stance duration, and uneven leg usage.
+  - Touchdown counts were uneven: `BL=25`, `BR=63`, `ML=70`, `MR=60`.
+  - The most common touchdown windows heavily reuse front-left/front-right/back-right, with back-left underused.
+- Decision:
+  - This is a successful reverse-motion smoke test, not a clean reverse baseline yet.
+  - The key unlock was restoring exploration with action-std reset plus a strong command-direction progress reward.
+  - Next cleanup run should start from `model_1700.pt` and keep reverse velocity tracking, but reduce exploration and strengthen straight-line/yaw/contact-cleanliness terms so the policy keeps the reverse speed while removing spin, rapid taps, and uneven leg usage.
+
+### Reverse Motion Stronger Yaw Cleanup
+- Goal: reduce the spin/yaw in the reverse gait while preserving backward velocity.
+- Starting checkpoint: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-15_20-04-16_reverse_y_high_explore_directional_160/model_1700.pt`
+- Run: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-15_20-53-12_reverse_y_stronger_yaw_cleanup_80`
+- Training changes:
+  - `yaw_rate_reward_scale=6.0`, up from the default `0.5`.
+  - `ang_vel_z_range=[0.0, 0.0]`, so commanded yaw is exactly straight.
+  - reset action std to `0.30`, lower than the discovery run's `0.80`.
+  - kept reverse command range `[-0.35, -0.20]`, `lin_vel_reward_scale=8.0`, `lin_vel_tracking_sigma=0.03`, `command_progress_reward_scale=8.0`.
+- Selected checkpoint: `model_1779.pt`
+- Artifacts:
+  - eval file: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-15_20-53-12_reverse_y_stronger_yaw_cleanup_80/eval_model_1779_reverse_y_neg0p30_800.txt`
+  - video: `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-15_20-53-12_reverse_y_stronger_yaw_cleanup_80/videos/reverse_y_neg0p30_stronger_yaw_model_1779/rl-video-step-0.mp4`
+- Metrics at `Y=-0.30 m/s`:
+  - `TASK_SCORE=0.5555`
+  - `MEAN_FORWARD_VEL_Y_MPS=-0.3070`
+  - `MEAN_ABS_LATERAL_VEL_X_MPS=0.0476`
+  - `MEAN_ABS_YAW_RATE_RADPS=0.3316`
+  - `MEAN_PROJECTED_GRAVITY_XY_NORM=0.1024`
+  - `MEAN_LATEST_TOUCHDOWN_STRIDE_M=0.0748`
+  - `MEAN_COMPLETED_STANCE_DURATION_S=0.0466`
+  - `MEAN_STANCE_FOOT_XY_SPEED_MPS=0.0839`
+  - `MEAN_LOW_SWING_FOOT_XY_SPEED_MPS=0.3194`
+  - `MEAN_LOW_SWING_FRACTION=0.1400`
+  - `MEAN_TOUCHDOWN_RATE_HZ=20.3252`
+  - `CONTACT_FRACTION_IMBALANCE=0.1046`
+  - `TOUCHDOWN_RATE_IMBALANCE_HZ=0.9521`
+  - `SCORE_VELOCITY=0.9988`
+  - `SCORE_TRACKING=0.3705`
+  - `SCORE_STRIDE=0.4655`
+  - `SCORE_RAPID_TAP=0.1458`
+  - `SCORE_CONTACT_BALANCE=0.5787`
+  - `SCORE_STANCE_SLIP=0.8385`
+  - `SCORE_LOW_SWING_DRAG=0.0780`
+- Comparison to the first successful reverse checkpoint `model_1700.pt`:
+  - strict score improved: `0.4077 -> 0.5555`.
+  - reverse speed stayed on target: `-0.3249 -> -0.3070 m/s`.
+  - yaw improved substantially: `0.8293 -> 0.3316 rad/s`.
+  - lateral drift improved slightly: `0.0528 -> 0.0476 m/s`.
+  - contact balance improved: `0.1955 -> 0.5787`.
+  - stride regressed: `0.1243 -> 0.0748 m`.
+  - low-swing drag regressed badly: `0.4283 -> 0.0780`.
+- Decision:
+  - This is straighter and objectively better by the current evaluator, but it is not the final reverse gait.
+  - The stronger yaw weight worked, but it traded off stride length and swing cleanliness.
+  - Next cleanup should keep the stronger yaw term and reintroduce moderate stride/swing-height pressure so the robot walks straight without collapsing into short, draggy steps.

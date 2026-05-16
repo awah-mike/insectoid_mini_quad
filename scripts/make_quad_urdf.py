@@ -25,6 +25,14 @@ FRONT_FIXED_JOINTS = {
     "FR_tibia_joint",
 }
 FRONT_COXA_JOINTS = {"FL_coxa_joint", "FR_coxa_joint"}
+WALKING_TIBIA_FOOT_OFFSETS = {
+    "BL_tibia_1": (-0.200, 0.0, 0.069),
+    "BR_tibia_1": (0.200, 0.0, -0.069),
+    "ML_tibia_1": (-0.200, 0.0, 0.069),
+    "MR_tibia_1": (0.200, 0.0, -0.069),
+}
+FOOT_RADIUS_M = 0.018
+FOOT_MASS_KG = 0.02
 
 
 def _parse_vector(text: str) -> np.ndarray:
@@ -108,17 +116,57 @@ def _make_joint_fixed(joint: ET.Element) -> None:
             joint.remove(child)
 
 
+def _add_spherical_foot(root: ET.Element, tibia_link_name: str, xyz: tuple[float, float, float]) -> None:
+    side = tibia_link_name.split("_", 1)[0]
+    foot_link_name = f"{side}_FOOT"
+    foot_joint_name = f"{side}_foot_fixed_joint"
+
+    # Avoid duplicating foot bodies when regenerating from an already-augmented source.
+    if root.find(f"./link[@name='{foot_link_name}']") is not None:
+        return
+
+    link = ET.SubElement(root, "link", {"name": foot_link_name})
+    inertial = ET.SubElement(link, "inertial")
+    ET.SubElement(inertial, "origin", {"xyz": "0 0 0", "rpy": "0 0 0"})
+    ET.SubElement(inertial, "mass", {"value": f"{FOOT_MASS_KG:.6g}"})
+    inertia = 0.4 * FOOT_MASS_KG * FOOT_RADIUS_M**2
+    ET.SubElement(
+        inertial,
+        "inertia",
+        {
+            "ixx": f"{inertia:.10g}",
+            "iyy": f"{inertia:.10g}",
+            "izz": f"{inertia:.10g}",
+            "ixy": "0",
+            "iyz": "0",
+            "ixz": "0",
+        },
+    )
+    for tag in ("visual", "collision"):
+        elem = ET.SubElement(link, tag)
+        ET.SubElement(elem, "origin", {"xyz": "0 0 0", "rpy": "0 0 0"})
+        geometry = ET.SubElement(elem, "geometry")
+        ET.SubElement(geometry, "sphere", {"radius": f"{FOOT_RADIUS_M:.6g}"})
+        if tag == "visual":
+            ET.SubElement(elem, "material", {"name": "foot_black"})
+
+    joint = ET.SubElement(root, "joint", {"name": foot_joint_name, "type": "fixed"})
+    ET.SubElement(joint, "origin", {"xyz": _format_vector(np.array(xyz, dtype=float)), "rpy": "0 0 0"})
+    ET.SubElement(joint, "parent", {"link": tibia_link_name})
+    ET.SubElement(joint, "child", {"link": foot_link_name})
+
+
 def make_quad_urdf(source: Path, output: Path, front_coxa_angle_deg: float) -> None:
     tree = ET.parse(source)
     root = tree.getroot()
     root.set("name", "insectoid_mini_quad")
 
-    # In this robot +Y is forward. Because the left front coxa frame is flipped
-    # relative to the right front frame, opposite local signs produce the same
-    # physical forward sweep.
+    # In this robot +Y is forward. The front-left coxa previously used the
+    # opposite sign; visual validation showed that it needed a +90 degree
+    # correction, so both front coxas now bake the same positive local sweep.
     forward_sweep = {
         "FR_coxa_joint": math.radians(front_coxa_angle_deg),
-        "FL_coxa_joint": -math.radians(front_coxa_angle_deg),
+        "FL_coxa_joint": math.radians(front_coxa_angle_deg),
     }
 
     for joint in root.findall("joint"):
@@ -127,6 +175,13 @@ def make_quad_urdf(source: Path, output: Path, front_coxa_angle_deg: float) -> N
             _bake_joint_angle(joint, forward_sweep[joint_name])
         if joint_name in FRONT_FIXED_JOINTS:
             _make_joint_fixed(joint)
+
+    if root.find("./material[@name='foot_black']") is None:
+        material = ET.SubElement(root, "material", {"name": "foot_black"})
+        ET.SubElement(material, "color", {"rgba": "0.02 0.02 0.02 1"})
+
+    for tibia_link_name, foot_offset in WALKING_TIBIA_FOOT_OFFSETS.items():
+        _add_spherical_foot(root, tibia_link_name, foot_offset)
 
     output.parent.mkdir(parents=True, exist_ok=True)
     _indent(root)
@@ -145,7 +200,7 @@ def main() -> None:
         type=Path,
         default=Path("/workspace/insectoid_mini_quad/URDF_description/urdf/URDF_quad.urdf"),
     )
-    parser.add_argument("--front-coxa-angle-deg", type=float, default=45.0)
+    parser.add_argument("--front-coxa-angle-deg", type=float, default=60.0)
     args = parser.parse_args()
     make_quad_urdf(args.source, args.output, args.front_coxa_angle_deg)
     print(

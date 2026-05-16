@@ -441,7 +441,7 @@
     <dynamics damping="0.1" friction="0.01" />
   </joint>
   <joint name="FR_coxa_joint" type="fixed">
-    <origin xyz="0.08 0.14 -0.002" rpy="0 -0 0.7853981634" />
+    <origin xyz="0.08 0.14 -0.002" rpy="0 -0 1.047197551" />
     <parent link="base_link" />
     <child link="FR_coxa_1" />
   </joint>
@@ -456,7 +456,7 @@
     <child link="FR_tibia_1" />
   </joint>
   <joint name="FL_coxa_joint" type="fixed">
-    <origin xyz="-0.08 0.14 -0.002" rpy="3.141592651 2.538366994e-09 0.7853981634" />
+    <origin xyz="-0.08 0.14 -0.002" rpy="3.141592652 -3.108851958e-09 -1.047197551" />
     <parent link="base_link" />
     <child link="FL_coxa_1" />
   </joint>
@@ -517,5 +517,108 @@
     <axis xyz="0 0 1" />
     <limit lower="0.000000" upper="2.617994" effort="24.0" velocity="5.445427" />
     <dynamics damping="0.1" friction="0.01" />
+  </joint>
+  <material name="foot_black">
+    <color rgba="0.02 0.02 0.02 1" />
+  </material>
+  <link name="BL_FOOT">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.02" />
+      <inertia ixx="2.592e-06" iyy="2.592e-06" izz="2.592e-06" ixy="0" iyz="0" ixz="0" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.018" />
+      </geometry>
+      <material name="foot_black" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.018" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="BL_foot_fixed_joint" type="fixed">
+    <origin xyz="-0.2 0 0.069" rpy="0 0 0" />
+    <parent link="BL_tibia_1" />
+    <child link="BL_FOOT" />
+  </joint>
+  <link name="BR_FOOT">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.02" />
+      <inertia ixx="2.592e-06" iyy="2.592e-06" izz="2.592e-06" ixy="0" iyz="0" ixz="0" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.018" />
+      </geometry>
+      <material name="foot_black" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.018" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="BR_foot_fixed_joint" type="fixed">
+    <origin xyz="0.2 0 -0.069" rpy="0 0 0" />
+    <parent link="BR_tibia_1" />
+    <child link="BR_FOOT" />
+  </joint>
+  <link name="ML_FOOT">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.02" />
+      <inertia ixx="2.592e-06" iyy="2.592e-06" izz="2.592e-06" ixy="0" iyz="0" ixz="0" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.018" />
+      </geometry>
+      <material name="foot_black" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.018" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="ML_foot_fixed_joint" type="fixed">
+    <origin xyz="-0.2 0 0.069" rpy="0 0 0" />
+    <parent link="ML_tibia_1" />
+    <child link="ML_FOOT" />
+  </joint>
+  <link name="MR_FOOT">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.02" />
+      <inertia ixx="2.592e-06" iyy="2.592e-06" izz="2.592e-06" ixy="0" iyz="0" ixz="0" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.018" />
+      </geometry>
+      <material name="foot_black" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.018" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="MR_foot_fixed_joint" type="fixed">
+    <origin xyz="0.2 0 -0.069" rpy="0 0 0" />
+    <parent link="MR_tibia_1" />
+    <child link="MR_FOOT" />
   </joint>
 </robot>

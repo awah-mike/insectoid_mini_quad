@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "insectoid-mini-quad-rl"
+version = "0.1.0"
+description = "Isaac Lab DirectRL task for the insectoid mini quad robot."
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.setuptools.packages.find]
+include = ["insectoid_mini_quad_rl*"]
