@@ -3,6 +3,10 @@
 This directory contains the best checkpoints and short validation videos from
 the Isaac Lab RSL-RL bringup as of 2026-05-16.
 
+Final project selection: **`forward_strict_best/model_1399.pt` is the favorite
+forward locomotion model**. Use it as the canonical mini-quad walking baseline
+for future comparison, export, or deployment work.
+
 ## Forward Strict Best
 
 - Checkpoint: `forward_strict_best/model_1399.pt`
@@ -12,8 +16,8 @@ the Isaac Lab RSL-RL bringup as of 2026-05-16.
 - Command: `+Y = 0.30 m/s`
 - Strict evaluator score: `TASK_SCORE=0.9211`
 
-This is the highest-scoring forward locomotion policy. Use this as the main
-forward baseline.
+This is the highest-scoring forward locomotion policy and the selected favorite
+model for this project.
 
 ## Forward Visual High-Step Benchmark
 
@@ -49,4 +53,3 @@ Install the RL package from the repo:
 ```
 
 Then render a checkpoint with the helper scripts under `rl/scripts/`.
-

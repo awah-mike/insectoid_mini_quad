@@ -18,11 +18,15 @@ the four walking tibias.
 
 ## Best Checkpoints
 
-- Main forward policy: `trained_models/forward_strict_best/model_1399.pt`
+- **Selected favorite forward locomotion policy**:
+  `trained_models/forward_strict_best/model_1399.pt`
 - Visual high-step forward benchmark:
   `trained_models/forward_visual_high_step/model_1558.pt`
 - Best reverse smoke-test policy:
   `trained_models/reverse_straighter_best/model_1779.pt`
+
+Use `model_1399.pt` as the final mini-quad forward locomotion baseline. It is
+the highest-scoring and most reliable policy from this project.
 
 Install the RL package:
 
@@ -32,4 +36,3 @@ Install the RL package:
 
 See `trained_models/README.md` and `rl/PROGRESS_LOG.md` for metrics and run
 history.
-

@@ -28,7 +28,8 @@ Registered Gym tasks:
 
 Best model checkpoints:
 
-- Main forward baseline: `trained_models/forward_strict_best/model_1399.pt`
+- Selected favorite forward locomotion baseline:
+  `trained_models/forward_strict_best/model_1399.pt`
   - strict score: `TASK_SCORE=0.9211`
   - source run: `2026-05-14_23-32-36_step_height_test_from_stride_best_200`
 - Forward visual high-step benchmark:
@@ -40,8 +41,9 @@ Best model checkpoints:
   - strict reverse score: `TASK_SCORE=0.5555`
   - reverse command: `Y=-0.30 m/s`
 
-The best forward checkpoint number is **`model_1399.pt`**. If a future session
-needs a single policy to start from, use that one.
+The best and final selected forward checkpoint number is **`model_1399.pt`**.
+If a future session needs a single policy to start from, export, compare
+against, or deploy, use that one.
 
 Recent important engineering decisions:
 

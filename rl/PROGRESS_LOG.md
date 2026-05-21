@@ -599,3 +599,20 @@
   - This is straighter and objectively better by the current evaluator, but it is not the final reverse gait.
   - The stronger yaw weight worked, but it traded off stride length and swing cleanliness.
   - Next cleanup should keep the stronger yaw term and reintroduce moderate stride/swing-height pressure so the robot walks straight without collapsing into short, draggy steps.
+
+### Final Project Closure Selection
+- Project status: mini-quad bringup is being closed out so work can move to a new Isaac Lab project.
+- Selected favorite forward locomotion model:
+  `/workspace/logs/rsl_rl/insectoid_mini_quad_flat/2026-05-14_23-32-36_step_height_test_from_stride_best_200/model_1399.pt`
+- Repo copy:
+  `/workspace/insectoid_mini_quad/trained_models/forward_strict_best/model_1399.pt`
+- Reason for selection:
+  - highest strict forward score observed: `TASK_SCORE=0.9211`
+  - cleanest overall forward locomotion tradeoff among tested policies
+  - better evaluator result than the higher-step visual benchmark
+- Important secondary models:
+  - `model_1558.pt`: higher-step visual benchmark, useful for comparing foot lift but not the final favorite.
+  - `model_1779.pt`: best reverse smoke-test checkpoint, not a polished gait.
+- Repository state:
+  - all relevant RL code, handoff notes, selected PyTorch checkpoints, eval files, and videos are stored under `/workspace/insectoid_mini_quad`.
+  - future sessions should start from `HANDOFF_QUAD.md`, `README.md`, `trained_models/README.md`, and this progress log.
