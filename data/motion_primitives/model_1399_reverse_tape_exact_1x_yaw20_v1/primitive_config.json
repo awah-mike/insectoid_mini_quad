@@ -1,0 +1,44 @@
+{
+  "label": "model_1399_reverse_tape_exact_1x_yaw20_v1",
+  "type": "time_reversed_action_tape",
+  "source_archive": "/home/ubuntu/insectoid_mini_quad/external/references/hexapod_transport_handoff_best_m30_selected_20260618_142349.zip",
+  "source_tape_pt": "/home/ubuntu/insectoid_mini_quad/external/references/hexapod_transport_handoff_best_m30_selected_20260618_142349/priors/reverse_tape_exact_reverse_tape_exact_1x_tape.pt",
+  "trajectory_npz": "/home/ubuntu/insectoid_mini_quad/data/trajectories/reversed_trajectory/reverse_tape_exact_1x_from_transport_handoff.npz",
+  "replay_script": "/home/ubuntu/insectoid_mini_quad/rl/scripts/render_reversed_joint_trajectory.py",
+  "policy_weights_modified": false,
+  "training_used": false,
+  "replay": {
+    "source": "action",
+    "source_array": "stabilized_actions",
+    "reverse": false,
+    "cycle": true,
+    "start_from_default": true,
+    "start_s": 0.0,
+    "end_s": 3.6,
+    "duration_s": 6.0,
+    "playback_speed": 1.0,
+    "root_z_offset": 0.04,
+    "root_yaw_rate_damping": 0.20,
+    "bl_tibia_bias_deg": 0.0
+  },
+  "transport_handoff_findings": {
+    "reverse_replay_tape_relation": "forward_tape flipped in time",
+    "reverse_agent_bl_tibia_bias_deg_in_transport": -30.0,
+    "standalone_bl_tibia_bias_result": "worse displacement and yaw drift than no bias",
+    "virtual_weld_used_in_transport": true,
+    "coupled_residual_actions_used_in_transport": true
+  },
+  "artifacts": {
+    "video": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_reverse_tape_exact_1x_yaw20_side_iso.mp4",
+    "contact_sheet": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_reverse_tape_exact_1x_yaw20_side_iso_contact_sheet.png",
+    "summary_json": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_reverse_tape_exact_1x_yaw20_side_iso.summary.json"
+  },
+  "metrics": {
+    "world_y_displacement_m": -0.758,
+    "mean_body_y_velocity_mps": -0.136,
+    "roll_p2p_deg": 5.581,
+    "pitch_p2p_deg": 6.319,
+    "yaw_drift_p2p_deg": 24.827,
+    "non_foot_contact_fraction": 0.0
+  }
+}

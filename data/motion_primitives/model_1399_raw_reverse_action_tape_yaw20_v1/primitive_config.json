@@ -1,0 +1,46 @@
+{
+  "label": "model_1399_raw_reverse_action_tape_yaw20_v1",
+  "type": "raw_model1399_time_reversed_action_tape",
+  "base_checkpoint": "/home/ubuntu/insectoid_mini_quad/trained_models/forward_strict_best/model_1399.pt",
+  "forward_tape_capture_npz": "/home/ubuntu/insectoid_mini_quad/data/trajectories/reversed_trajectory/model_1399_raw_forward_tape_capture.trajectory.npz",
+  "replay_script": "/home/ubuntu/insectoid_mini_quad/rl/scripts/render_reversed_joint_trajectory.py",
+  "policy_weights_modified": false,
+  "training_used": false,
+  "capture": {
+    "forward_vel": 0.30,
+    "video_length_steps": 260,
+    "warmup_steps": 80,
+    "record_steps": 180,
+    "action_filter_alpha": 1.0,
+    "yaw_feedback": false,
+    "mirror_bl_from_br": false,
+    "stride_ik": false,
+    "recycle_actions": false
+  },
+  "replay": {
+    "source": "action",
+    "source_array": "stabilized_actions",
+    "reverse": true,
+    "cycle": true,
+    "start_from_default": true,
+    "start_s": 1.60,
+    "end_s": 5.20,
+    "duration_s": 6.0,
+    "playback_speed": 1.0,
+    "root_z_offset": 0.04,
+    "root_yaw_rate_damping": 0.20
+  },
+  "artifacts": {
+    "video": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_raw_reverse_action_tape_yaw20_side_iso.mp4",
+    "contact_sheet": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_raw_reverse_action_tape_yaw20_side_iso_contact_sheet.png",
+    "summary_json": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_raw_reverse_action_tape_yaw20_side_iso.summary.json"
+  },
+  "metrics": {
+    "world_y_displacement_m": -0.722,
+    "mean_body_y_velocity_mps": -0.138,
+    "roll_p2p_deg": 13.689,
+    "pitch_p2p_deg": 11.055,
+    "yaw_drift_p2p_deg": 30.624,
+    "non_foot_contact_fraction": 0.0
+  }
+}

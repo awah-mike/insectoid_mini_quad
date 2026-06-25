@@ -1,0 +1,74 @@
+{
+  "label": "model_1399_refined_clean_reverse_velocity_matched_s25_v1",
+  "type": "velocity_matched_reversed_realized_joint_trajectory_replay",
+  "policy_weights_modified": false,
+  "trained_reverse_policy": false,
+  "source_forward_label": "model_1399_forward_recycled_stride_v1",
+  "source_checkpoint": "/home/ubuntu/insectoid_mini_quad/trained_models/forward_strict_best/model_1399.pt",
+  "source_trajectory_npz": "/home/ubuntu/insectoid_mini_quad/data/trajectories/reversed_trajectory/model_1399_forward_canonical_capture.trajectory.npz",
+  "replay": {
+    "script": "/home/ubuntu/insectoid_mini_quad/rl/scripts/render_reversed_joint_trajectory.py",
+    "source": "actual",
+    "start_s": 2.46,
+    "end_s": 3.04,
+    "duration_s": 6.0,
+    "playback_speed": 2.5,
+    "reverse": true,
+    "cycle": true,
+    "start_from_default": true
+  },
+  "post_model_cleanups": {
+    "inherits_forward_cleaned_trajectory": {
+      "yaw_stabilizer": true,
+      "bl_br_distal_symmetry": true,
+      "stride_ik": true,
+      "action_recycling": true
+    },
+    "reverse_yaw_feedback": {
+      "yaw_feedback_kp": 0.45,
+      "yaw_rate_feedback_kd": 0.70,
+      "max_yaw_feedback": 0.35
+    },
+    "reverse_posture": {
+      "front_up_deg": -15.0
+    },
+    "root_yaw_rate_damping": 0.2,
+    "body_y_velocity_servo": {
+      "target_mps": -0.45,
+      "alpha": 1.0,
+      "start_s": 0.0
+    }
+  },
+  "camera": {
+    "eye": [4.6, -1.2, 3.0],
+    "lookat": [0.0, -1.2, 0.12],
+    "width": 1280,
+    "height": 720,
+    "fps": 50
+  },
+  "artifacts": {
+    "video": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_refined_clean_reverse_velocity_matched_s25_side_iso.mp4",
+    "contact_sheet": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_refined_clean_reverse_velocity_matched_s25_side_iso_contact_sheet.png",
+    "summary": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_refined_clean_reverse_velocity_matched_s25_side_iso.summary.json"
+  },
+  "metrics": {
+    "mean_body_y_velocity_mps": -0.449998676776886,
+    "forward_reference_body_y_velocity_mps": 0.45311254262924194,
+    "root_displacement_w_m": [-0.1699248105287552, -2.221404552459717, -0.013320595026016235],
+    "mean_world_velocity_y_mps": -0.3714723331872436,
+    "roll_peak_to_peak_deg": 18.35669708251953,
+    "pitch_peak_to_peak_deg": 4.557039260864258,
+    "yaw_drift_peak_to_peak_deg": 10.042102813720703,
+    "mean_foot_contact_count": 3.3833333333333333,
+    "non_foot_contact_fraction": 0.0,
+    "bl_foot_mean_stance_xy_speed_mps": 0.30840593576431274,
+    "br_foot_mean_stance_xy_speed_mps": 0.16375097632408142,
+    "ml_foot_mean_stance_xy_speed_mps": 0.3696657717227936,
+    "mr_foot_mean_stance_xy_speed_mps": 0.38094833493232727
+  },
+  "caveats": [
+    "Velocity matching is achieved with a root body-Y velocity servo, not learned reverse control.",
+    "Use for visualization and rapid multi-robot behavior prototyping.",
+    "A true trained reverse policy is still needed if root velocity writes are unacceptable."
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "label": "model_1399_forward_recycled_stride_v1",
+  "type": "post_policy_motion_primitive",
+  "base_checkpoint": "/home/ubuntu/insectoid_mini_quad/trained_models/forward_strict_best/model_1399.pt",
+  "task": "Isaac-InsectoidMiniQuad-Flat-Direct-Play-v0",
+  "controller_script": "/home/ubuntu/insectoid_mini_quad/rl/scripts/render_stabilized_policy_video.py",
+  "policy_weights_modified": false,
+  "post_policy_controls": {
+    "forward_vel": 0.6,
+    "action_filter_alpha": 1.0,
+    "yaw_stabilizer": {
+      "yaw_feedback_sign": 1.0,
+      "yaw_feedback_kp": 0.45,
+      "yaw_rate_feedback_kd": 0.7,
+      "max_yaw_feedback": 0.35
+    },
+    "bl_mirror": {
+      "enabled": true,
+      "joints": "distal",
+      "blend": 0.55,
+      "delay_phase": 0.55,
+      "cycle_steps": 17.77777777777778
+    },
+    "stride_ik": {
+      "profile": "swing_reach",
+      "rear_forward_m": -0.08,
+      "middle_forward_m": 0.0,
+      "rear_joints": "coxa",
+      "middle_joints": "coxa_tibia",
+      "duration_s": 0.12,
+      "max_action_delta": 0.6
+    },
+    "action_recycling": {
+      "enabled": true,
+      "capture_start_s": 0.72,
+      "capture_end_s": 1.3,
+      "live_yaw_feedback_during_replay": true
+    }
+  },
+  "reference_artifacts": {
+    "video": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_recycled_early_phase_072_130_side_iso.mp4",
+    "contact_sheet": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_recycled_early_phase_072_130_side_iso_contact_sheet.png",
+    "attitude_json": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_recycled_early_phase_072_130_side_iso.attitude.json",
+    "telemetry_csv": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_recycled_early_phase_072_130_side_iso.telemetry.csv"
+  },
+  "reference_metrics": {
+    "mean_body_forward_velocity_mps": 0.45311254262924194,
+    "non_foot_contact_fraction": 0.0,
+    "roll_peak_to_peak_deg": 7.849714756011963,
+    "pitch_peak_to_peak_deg": 7.9551496505737305,
+    "yaw_drift_peak_to_peak_deg": 19.95714569091797,
+    "bl_mean_stance_xy_speed_mps": 0.3270140290260315
+  },
+  "known_tradeoffs": [
+    "Higher yaw drift than the slower stabilized gait.",
+    "Higher torso motion than the clean gait.",
+    "Higher foot slip than the clean gait.",
+    "Useful as a visual forward primitive, not as a standalone trained checkpoint."
+  ]
+}

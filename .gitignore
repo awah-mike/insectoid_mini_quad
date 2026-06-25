@@ -1,0 +1,32 @@
+# Python build/runtime files
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Isaac Sim / Omniverse local runtime output
+*.log
+kit_*.txt
+omni.log
+
+# Generated render outputs. Keep README files and the three canonical rollout
+# videos that were already tracked before the repo reorganization.
+/outputs/renders/**
+!/outputs/renders/README.md
+/outputs/training_rollouts/**
+!/outputs/training_rollouts/README.md
+!/outputs/training_rollouts/forward_strict_best/
+!/outputs/training_rollouts/forward_strict_best/forward_strict_best_model_1399.mp4
+!/outputs/training_rollouts/forward_visual_high_step/
+!/outputs/training_rollouts/forward_visual_high_step/forward_visual_high_step_model_1558.mp4
+!/outputs/training_rollouts/reverse_straighter_best/
+!/outputs/training_rollouts/reverse_straighter_best/reverse_straighter_model_1779.mp4
+
+# Local external/reference material can be large and is not core source.
+/external/references/**
+!/external/references/README.md
+
+# Keep generated handoff archives, but not extracted duplicate package trees.
+/packages/handoff/*/

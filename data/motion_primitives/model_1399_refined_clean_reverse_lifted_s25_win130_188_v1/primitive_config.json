@@ -1,0 +1,76 @@
+{
+  "label": "model_1399_refined_clean_reverse_lifted_s25_win130_188_v1",
+  "type": "lifted_velocity_matched_reversed_realized_joint_trajectory_replay",
+  "policy_weights_modified": false,
+  "trained_reverse_policy": false,
+  "source_forward_label": "model_1399_forward_recycled_stride_v1",
+  "source_checkpoint": "/home/ubuntu/insectoid_mini_quad/trained_models/forward_strict_best/model_1399.pt",
+  "source_trajectory_npz": "/home/ubuntu/insectoid_mini_quad/data/trajectories/reversed_trajectory/model_1399_forward_canonical_capture.trajectory.npz",
+  "replay": {
+    "script": "/home/ubuntu/insectoid_mini_quad/rl/scripts/render_reversed_joint_trajectory.py",
+    "source": "actual",
+    "start_s": 1.30,
+    "end_s": 1.88,
+    "duration_s": 6.0,
+    "playback_speed": 2.5,
+    "reverse": true,
+    "cycle": true,
+    "start_from_default": true
+  },
+  "post_model_cleanups": {
+    "body_y_velocity_servo": {
+      "target_mps": -0.45,
+      "alpha": 1.0,
+      "start_s": 0.0
+    },
+    "reverse_yaw_feedback": {
+      "yaw_feedback_kp": 0.45,
+      "yaw_rate_feedback_kd": 0.70,
+      "max_yaw_feedback": 0.35
+    },
+    "reverse_posture": {
+      "front_up_deg": -15.0,
+      "root_z_offset": 0.085
+    },
+    "root_yaw_rate_damping": 0.4,
+    "scheduled_swing_lift": {
+      "source": "recorded_foot_contacts",
+      "switching": "cyclic_sine_pulse_per_recorded_airborne_segment",
+      "height_m": 0.03,
+      "joints": "femur_tibia",
+      "rear_scale": 1.0,
+      "middle_scale": 2.0,
+      "max_action_delta": 0.55
+    }
+  },
+  "camera": {
+    "eye": [4.6, -1.2, 3.0],
+    "lookat": [0.0, -1.2, 0.12],
+    "width": 1280,
+    "height": 720,
+    "fps": 50
+  },
+  "artifacts": {
+    "video": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_refined_clean_reverse_lifted_s25_win130_188_side_iso.mp4",
+    "contact_sheet": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_refined_clean_reverse_lifted_s25_win130_188_side_iso_contact_sheet.png",
+    "summary": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_refined_clean_reverse_lifted_s25_win130_188_side_iso.summary.json"
+  },
+  "metrics": {
+    "mean_body_y_velocity_mps": -0.449998676776886,
+    "root_displacement_w_m": [0.303112655878067, -2.3747403621673584, -0.05359180271625519],
+    "roll_peak_to_peak_deg": 14.88918399810791,
+    "pitch_peak_to_peak_deg": 4.580042839050293,
+    "yaw_drift_peak_to_peak_deg": 7.5672221183776855,
+    "mean_foot_contact_count": 2.1766666666666667,
+    "non_foot_contact_fraction": 0.0,
+    "bl_foot_max_scheduled_lift_height_m": 0.16612501442432404,
+    "br_foot_max_scheduled_lift_height_m": 0.18385453522205353,
+    "ml_foot_max_scheduled_lift_height_m": 0.05931198596954346,
+    "mr_foot_max_scheduled_lift_height_m": 0.03993181884288788
+  },
+  "caveats": [
+    "Velocity is still matched with a root body-Y velocity servo.",
+    "Rear-leg lift is stronger than middle-leg lift.",
+    "This is a visualization primitive and behavior prototype, not a trained reverse locomotion policy."
+  ]
+}

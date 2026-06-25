@@ -1,0 +1,48 @@
+{
+  "label": "model_1399_reversed_actual_joint_traj_reclined_yawdamp_v2",
+  "type": "reversed_achieved_joint_trajectory_with_body_recline",
+  "base_checkpoint": "/home/ubuntu/insectoid_mini_quad/trained_models/forward_strict_best/model_1399.pt",
+  "source_forward_primitive": "model_1399_forward_recycled_stride_v1",
+  "trajectory_npz": "/home/ubuntu/insectoid_mini_quad/data/trajectories/reversed_trajectory/model_1399_forward_canonical_capture.trajectory.npz",
+  "replay_script": "/home/ubuntu/insectoid_mini_quad/rl/scripts/render_reversed_joint_trajectory.py",
+  "policy_weights_modified": false,
+  "training_used": false,
+  "replay": {
+    "source": "actual",
+    "source_array": "actual_joint_pos",
+    "reverse": true,
+    "cycle": true,
+    "start_from_default": true,
+    "start_s": 2.46,
+    "end_s": 3.04,
+    "duration_s": 6.0,
+    "playback_speed": 1.0,
+    "root_z_offset": 0.04,
+    "init_reversed_root_velocity": false,
+    "init_joint_velocity": false,
+    "front_up_deg": -15.0,
+    "front_up_kp": 0.0,
+    "front_up_kd": 0.0,
+    "front_up_max_angvel": 1.0,
+    "root_yaw_rate_damping": 0.20
+  },
+  "artifacts": {
+    "video": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_reversed_actual_joint_traj_reclined_yawdamp_v2_side_iso.mp4",
+    "contact_sheet": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_reversed_actual_joint_traj_reclined_yawdamp_v2_side_iso_contact_sheet.png",
+    "summary_json": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_reversed_actual_joint_traj_reclined_yawdamp_v2_side_iso.summary.json"
+  },
+  "metrics": {
+    "world_y_displacement_m": -0.313,
+    "mean_body_y_velocity_mps": -0.057,
+    "roll_p2p_deg": 17.396,
+    "pitch_p2p_deg": 10.834,
+    "yaw_drift_p2p_deg": 29.070,
+    "non_foot_contact_fraction": 0.0
+  },
+  "sweep_notes": {
+    "baseline_v1_world_y_displacement_m": -0.266,
+    "baseline_v1_yaw_drift_p2p_deg": 38.331,
+    "positive_front_up_sign_result": "worse reverse displacement and higher attitude excursion",
+    "selected_tradeoff": "front_up_deg=-15 with root_yaw_rate_damping=0.20"
+  }
+}

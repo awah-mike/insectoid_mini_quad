@@ -12,9 +12,18 @@ the four walking tibias.
 - `scripts/`: asset generation and verification scripts.
 - `rl/`: Isaac Lab DirectRLEnv package, RSL-RL config, diagnostics, playback,
   and progress log.
-- `trained_models/`: selected checkpoints, short videos, and strict evaluator
-  outputs.
-- `HANDOFF_QUAD.md`: detailed continuation notes for future Codex sessions.
+- `trained_models/`: selected policy checkpoints, exported policies, and strict
+  evaluator outputs.
+- `data/`: extracted trajectories, motion primitives, and analysis data used by
+  scripted render demos.
+- `outputs/`: generated videos, images, logs, and summaries. Canonical rollout
+  videos live under `outputs/training_rollouts/`.
+- `docs/`: repo layout notes and handoff documentation for future sessions.
+- `packages/`: generated handoff archives.
+- `external/`: local third-party/reference material that is useful during
+  development but is not core source.
+
+See `docs/REPO_LAYOUT.md` for the detailed organization rules.
 
 ## Best Checkpoints
 
@@ -34,5 +43,5 @@ Install the RL package:
 /workspace/isaaclab/isaaclab.sh -p -m pip install -e /workspace/insectoid_mini_quad/rl
 ```
 
-See `trained_models/README.md` and `rl/PROGRESS_LOG.md` for metrics and run
-history.
+See `trained_models/README.md`, `docs/handoff/HANDOFF_QUAD.md`, and
+`rl/PROGRESS_LOG.md` for metrics and run history.

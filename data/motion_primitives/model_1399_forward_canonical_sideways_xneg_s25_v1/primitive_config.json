@@ -1,0 +1,95 @@
+{
+  "label": "model_1399_forward_canonical_sideways_xneg_s25_v1",
+  "type": "sideways_velocity_matched_forward_trajectory_remap",
+  "policy_weights_modified": false,
+  "trained_sideways_policy": false,
+  "source_forward_label": "model_1399_forward_recycled_stride_v1",
+  "source_checkpoint": "/home/ubuntu/insectoid_mini_quad/trained_models/forward_strict_best/model_1399.pt",
+  "source_trajectory_npz": "/home/ubuntu/insectoid_mini_quad/data/trajectories/reversed_trajectory/model_1399_forward_canonical_capture.trajectory.npz",
+  "replay": {
+    "script": "/home/ubuntu/insectoid_mini_quad/rl/scripts/render_reversed_joint_trajectory.py",
+    "source": "actual",
+    "start_s": 0.72,
+    "end_s": 1.30,
+    "duration_s": 6.0,
+    "playback_speed": 2.5,
+    "reverse": false,
+    "cycle": true,
+    "start_from_default": true
+  },
+  "post_model_cleanups": {
+    "body_x_velocity_servo": {
+      "target_mps": -0.35,
+      "alpha": 1.0,
+      "start_s": 0.0
+    },
+    "body_y_velocity_servo": {
+      "target_mps": 0.0,
+      "alpha": 1.0,
+      "start_s": 0.0
+    },
+    "yaw_feedback": {
+      "yaw_feedback_kp": 0.85,
+      "yaw_rate_feedback_kd": 1.30,
+      "max_yaw_feedback": 0.55
+    },
+    "root_yaw_rate_damping": 0.75,
+    "root_z_offset": 0.085,
+    "sideways_trajectory_remap": {
+      "source": "canonical_forward_body_frame_foot_excursion",
+      "sideways_remap_scale": 1.5,
+      "sideways_remap_sign": -1.0,
+      "sideways_remap_x_keep_scale": 1.0,
+      "sideways_remap_y_keep_scale": 0.0,
+      "sideways_remap_joints": "all",
+      "sideways_remap_max_action_delta": 0.85
+    },
+    "scheduled_lift": {
+      "source": "recorded_foot_contacts",
+      "height_m": 0.02,
+      "joints": "femur_tibia",
+      "rear_scale": 1.0,
+      "middle_scale": 1.5,
+      "dilate_steps": 1,
+      "max_action_delta": 0.45
+    }
+  },
+  "camera": {
+    "eye": [-0.9, -4.2, 2.8],
+    "lookat": [-0.9, 0.0, 0.12],
+    "width": 1280,
+    "height": 720,
+    "fps": 50
+  },
+  "artifacts": {
+    "video": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_forward_canonical_sideways_xneg_s25_front_iso.mp4",
+    "contact_sheet": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_forward_canonical_sideways_xneg_s25_front_iso_contact_sheet.png",
+    "summary": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_forward_canonical_sideways_xneg_s25_front_iso.summary.json"
+  },
+  "metrics": {
+    "mean_body_x_velocity_mps": -0.3499990403652191,
+    "mean_body_y_velocity_mps": 1.3342737581467645e-8,
+    "root_displacement_w_m": [-1.8176566362380981, 0.4655829071998596, -0.0359201580286026],
+    "roll_peak_to_peak_deg": 5.1131720542907715,
+    "pitch_peak_to_peak_deg": 3.9454030990600586,
+    "yaw_drift_peak_to_peak_deg": 28.526517868041992,
+    "mean_foot_contact_count": 1.79,
+    "non_foot_contact_fraction": 0.0,
+    "bl_foot_max_scheduled_lift_height_m": 0.061499595642089844,
+    "br_foot_max_scheduled_lift_height_m": 0.08009842038154602,
+    "ml_foot_max_scheduled_lift_height_m": 0.07609167695045471,
+    "mr_foot_max_scheduled_lift_height_m": 0.05134649574756622
+  },
+  "tested_alternatives": [
+    "positive and negative body-X directions",
+    "body-X velocity targets from 0.25 to 0.35 m/s",
+    "sideways remap scales 1.0 and 1.5",
+    "forward-foot-excursion keep scales from 0.0 to 0.15",
+    "direct root yaw pose servo variants, rejected due to larger yaw/world drift"
+  ],
+  "caveats": [
+    "Velocity is still matched with root body-X and body-Y velocity servos.",
+    "Yaw drift remains visible, but direct root yaw servo made it worse.",
+    "This is a visualization primitive and behavior prototype, not a trained lateral locomotion policy."
+  ]
+}

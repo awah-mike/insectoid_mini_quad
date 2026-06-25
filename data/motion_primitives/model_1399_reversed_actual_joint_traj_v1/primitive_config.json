@@ -1,0 +1,38 @@
+{
+  "label": "model_1399_reversed_actual_joint_traj_v1",
+  "type": "reversed_achieved_joint_trajectory",
+  "base_checkpoint": "/home/ubuntu/insectoid_mini_quad/trained_models/forward_strict_best/model_1399.pt",
+  "source_forward_primitive": "model_1399_forward_recycled_stride_v1",
+  "trajectory_npz": "/home/ubuntu/insectoid_mini_quad/data/trajectories/reversed_trajectory/model_1399_forward_canonical_capture.trajectory.npz",
+  "replay_script": "/home/ubuntu/insectoid_mini_quad/rl/scripts/render_reversed_joint_trajectory.py",
+  "policy_weights_modified": false,
+  "training_used": false,
+  "replay": {
+    "source": "actual",
+    "source_array": "actual_joint_pos",
+    "reverse": true,
+    "cycle": true,
+    "start_from_default": true,
+    "start_s": 2.46,
+    "end_s": 3.04,
+    "duration_s": 6.0,
+    "playback_speed": 1.0,
+    "root_z_offset": 0.04,
+    "init_reversed_root_velocity": false,
+    "init_joint_velocity": false,
+    "root_yaw_rate_damping": 0.0
+  },
+  "artifacts": {
+    "video": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_reversed_actual_joint_traj_v1_side_iso.mp4",
+    "contact_sheet": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_reversed_actual_joint_traj_v1_side_iso_contact_sheet.png",
+    "summary_json": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_reversed_actual_joint_traj_v1_side_iso.summary.json"
+  },
+  "metrics": {
+    "world_y_displacement_m": -0.266,
+    "mean_body_y_velocity_mps": -0.052,
+    "roll_p2p_deg": 6.448,
+    "pitch_p2p_deg": 11.233,
+    "yaw_drift_p2p_deg": 38.331,
+    "non_foot_contact_fraction": 0.0
+  }
+}

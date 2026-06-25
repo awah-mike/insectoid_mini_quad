@@ -9,6 +9,7 @@ an analytic one-leg-at-a-time crawl gait in foot space.
 from __future__ import annotations
 
 import argparse
+import json
 import math
 from pathlib import Path
 
@@ -30,6 +31,9 @@ parser.add_argument("--ik-gain", type=float, default=0.7)
 parser.add_argument("--ik-damping", type=float, default=0.04)
 parser.add_argument("--max-joint-step-deg", type=float, default=4.0)
 parser.add_argument("--settle-time", type=float, default=0.75)
+parser.add_argument("--static-friction", type=float, default=1.0)
+parser.add_argument("--dynamic-friction", type=float, default=1.0)
+parser.add_argument("--summary-output", type=Path, default=None)
 parser.add_argument("--eye", type=float, nargs=3, default=(2.6, -2.2, 1.25))
 parser.add_argument("--lookat", type=float, nargs=3, default=(0.0, 0.0, 0.13))
 AppLauncher.add_app_launcher_args(parser)
@@ -134,6 +138,13 @@ def main() -> None:
     env_cfg.viewer.eye = tuple(args.eye)
     env_cfg.viewer.lookat = tuple(args.lookat)
     env_cfg.viewer.origin_type = "world"
+    env_cfg.sim.physics_material.static_friction = args.static_friction
+    env_cfg.sim.physics_material.dynamic_friction = args.dynamic_friction
+    env_cfg.terrain.physics_material.static_friction = args.static_friction
+    env_cfg.terrain.physics_material.dynamic_friction = args.dynamic_friction
+    if hasattr(env_cfg, "events") and env_cfg.events.physics_material is not None:
+        env_cfg.events.physics_material.params["static_friction_range"] = (args.static_friction, args.static_friction)
+        env_cfg.events.physics_material.params["dynamic_friction_range"] = (args.dynamic_friction, args.dynamic_friction)
 
     env = gym.make(args.task, cfg=env_cfg, render_mode="rgb_array")
     env.reset()
@@ -179,6 +190,9 @@ def main() -> None:
     foot_anchors_w = raw._robot.data.body_pos_w[:, foot_ids, :].clone()
     active_swing = {leg: False for leg in LEGS}
     q_command = raw._robot.data.joint_pos.clone()
+    initial_base_pos = raw._robot.data.root_pos_w[0].detach().cpu().numpy().copy()
+    root_positions = []
+    projected_gravity_xy_norms = []
 
     for step in range(total_steps):
         t = step * raw.step_dt
@@ -196,6 +210,8 @@ def main() -> None:
         actions = torch.clamp((target - default_joint_pos) / action_scale, -1.0, 1.0)
         with torch.inference_mode():
             env.step(actions)
+        root_positions.append(raw._robot.data.root_pos_w[0].detach().cpu().numpy().copy())
+        projected_gravity_xy_norms.append(torch.norm(raw._robot.data.projected_gravity_b[0, :2]).item())
         if step % capture_every == 0 or step == total_steps - 1:
             frame = env.render()
             if frame is not None and frame.size:
@@ -211,6 +227,34 @@ def main() -> None:
     imageio.imwrite(first_visible_path, first_visible)
     imageio.imwrite(snapshot_path, frames[-1])
     imageio.mimsave(video_path, frames, fps=args.fps)
+    root_positions_array = np.asarray(root_positions)
+    final_base_pos = raw._robot.data.root_pos_w[0].detach().cpu().numpy().copy()
+    displacement = final_base_pos - initial_base_pos
+    summary = {
+        "video": str(video_path),
+        "initial_snapshot": str(first_visible_path),
+        "final_snapshot": str(snapshot_path),
+        "duration_s": args.duration,
+        "fps": args.fps,
+        "cycle_time_s": args.cycle_time,
+        "swing_fraction": args.swing_fraction,
+        "step_length_m": args.step_length,
+        "step_height_m": args.step_height,
+        "ik_gain": args.ik_gain,
+        "ik_damping": args.ik_damping,
+        "max_joint_step_deg": args.max_joint_step_deg,
+        "static_friction": args.static_friction,
+        "dynamic_friction": args.dynamic_friction,
+        "initial_base_pos_w": initial_base_pos.tolist(),
+        "final_base_pos_w": final_base_pos.tolist(),
+        "base_displacement_w": displacement.tolist(),
+        "mean_world_vel_y_mps": float(displacement[1] / max(args.duration, 1.0e-6)),
+        "min_base_z_w": float(np.min(root_positions_array[:, 2])),
+        "max_projected_gravity_xy_norm": float(np.max(projected_gravity_xy_norms)),
+    }
+    if args.summary_output is not None:
+        args.summary_output.parent.mkdir(parents=True, exist_ok=True)
+        args.summary_output.write_text(json.dumps(summary, indent=2) + "\n")
 
     print(f"VIDEO={video_path}", flush=True)
     print(f"INITIAL_SNAPSHOT={first_visible_path}", flush=True)
@@ -220,8 +264,14 @@ def main() -> None:
     print(f"FOOT_NAMES={found_foot_names}", flush=True)
     print(f"STEP_LENGTH_M={args.step_length}", flush=True)
     print(f"STEP_HEIGHT_M={args.step_height}", flush=True)
-    print(f"BASE_POS_W={raw._robot.data.root_pos_w[0].detach().cpu().tolist()}", flush=True)
+    print(f"BASE_POS_W={final_base_pos.tolist()}", flush=True)
+    print(f"BASE_DISPLACEMENT_W={displacement.tolist()}", flush=True)
+    print(f"MEAN_WORLD_VEL_Y={summary['mean_world_vel_y_mps']:.4f}", flush=True)
+    print(f"MIN_BASE_Z_W={summary['min_base_z_w']:.4f}", flush=True)
     print(f"PROJECTED_GRAVITY_XY_NORM={torch.norm(raw._robot.data.projected_gravity_b[0, :2]).item():.6f}", flush=True)
+    print(f"MAX_PROJECTED_GRAVITY_XY_NORM={summary['max_projected_gravity_xy_norm']:.6f}", flush=True)
+    if args.summary_output is not None:
+        print(f"SUMMARY={args.summary_output}", flush=True)
     env.close()
 
 

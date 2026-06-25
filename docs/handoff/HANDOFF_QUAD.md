@@ -13,7 +13,8 @@ Important paths:
 - Robot asset: `URDF_description/usd/insectoid_mini_quad.usd`
 - RL package: `rl/`
 - Full experiment progress log: `rl/PROGRESS_LOG.md`
-- Best checkpoints/videos/evals: `trained_models/`
+- Best checkpoints/evals: `trained_models/`
+- Canonical rollout videos: `outputs/training_rollouts/`
 
 Install the RL package from this repo:
 

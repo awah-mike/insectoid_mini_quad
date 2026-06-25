@@ -615,4 +615,4 @@
   - `model_1779.pt`: best reverse smoke-test checkpoint, not a polished gait.
 - Repository state:
   - all relevant RL code, handoff notes, selected PyTorch checkpoints, eval files, and videos are stored under `/workspace/insectoid_mini_quad`.
-  - future sessions should start from `HANDOFF_QUAD.md`, `README.md`, `trained_models/README.md`, and this progress log.
+  - future sessions should start from `docs/handoff/HANDOFF_QUAD.md`, `README.md`, `trained_models/README.md`, and this progress log.

@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import math
+from pathlib import Path
 
 import isaaclab.sim as sim_utils
 from isaaclab.actuators import ImplicitActuatorCfg
 from isaaclab.assets import ArticulationCfg
 
 
-USD_PATH = "/workspace/insectoid_mini_quad/URDF_description/usd/insectoid_mini_quad.usd"
+REPO_ROOT = Path(__file__).resolve().parents[2]
+USD_PATH = str(REPO_ROOT / "URDF_description/usd/insectoid_mini_quad.usd")
 
 AK45_36_PEAK_TORQUE_NM = 24.0
 AK45_36_RATED_TORQUE_NM = 8.0

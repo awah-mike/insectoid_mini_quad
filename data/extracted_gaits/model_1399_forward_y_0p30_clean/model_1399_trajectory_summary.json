@@ -1,0 +1,290 @@
+{
+  "checkpoint": "/home/ubuntu/insectoid_mini_quad/trained_models/forward_strict_best/model_1399.pt",
+  "task": "Isaac-InsectoidMiniQuad-Flat-Direct-Play-v0",
+  "output_dir": "/home/ubuntu/insectoid_mini_quad/data/extracted_gaits/model_1399_forward_y_0p30_clean",
+  "steps": 900,
+  "skip_steps": 250,
+  "step_dt": 0.02,
+  "duration_s": 18.0,
+  "command": {
+    "lateral_vel_x": 0.0,
+    "forward_vel_y": 0.3,
+    "yaw_rate_z": 0.0
+  },
+  "joint_names": [
+    "BL_coxa_joint",
+    "BR_coxa_joint",
+    "ML_coxa_joint",
+    "MR_coxa_joint",
+    "BL_femur_joint",
+    "BR_femur_joint",
+    "ML_femur_joint",
+    "MR_femur_joint",
+    "BL_tibia_joint",
+    "BR_tibia_joint",
+    "ML_tibia_joint",
+    "MR_tibia_joint"
+  ],
+  "foot_names": [
+    "BL_FOOT",
+    "BR_FOOT",
+    "ML_FOOT",
+    "MR_FOOT"
+  ],
+  "default_joint_pos": [
+    -0.3490658402442932,
+    -0.3490658402442932,
+    0.5235987901687622,
+    0.5235987901687622,
+    -0.4363323152065277,
+    -0.4363323152065277,
+    -0.4363323152065277,
+    -0.4363323152065277,
+    1.919862151145935,
+    1.919862151145935,
+    1.919862151145935,
+    1.919862151145935
+  ],
+  "action_scale": 0.5,
+  "mean_root_lin_vel_b_after_skip": [
+    0.028812646865844727,
+    0.30304402112960815,
+    0.02332235500216484
+  ],
+  "mean_root_ang_vel_b_after_skip": [
+    0.005937395617365837,
+    -0.02258402854204178,
+    0.05773366615176201
+  ],
+  "mean_contacts_after_skip": [
+    0.5492307692307692,
+    0.39692307692307693,
+    0.6784615384615384,
+    0.6076923076923076
+  ],
+  "done_steps": [],
+  "cycle_summary": {
+    "cycle_foot": "BR_FOOT",
+    "cycle_foot_index": 1,
+    "touchdown_counts_after_skip": {
+      "BL_FOOT": 36,
+      "BR_FOOT": 37,
+      "ML_FOOT": 37,
+      "MR_FOOT": 36
+    },
+    "cycle_count": 36,
+    "excluded_done_steps": [],
+    "cycle_bounds_step_indices": [
+      [
+        258,
+        276
+      ],
+      [
+        276,
+        294
+      ],
+      [
+        294,
+        312
+      ],
+      [
+        312,
+        331
+      ],
+      [
+        331,
+        348
+      ],
+      [
+        348,
+        366
+      ],
+      [
+        366,
+        384
+      ],
+      [
+        384,
+        401
+      ],
+      [
+        401,
+        419
+      ],
+      [
+        419,
+        437
+      ],
+      [
+        437,
+        454
+      ],
+      [
+        454,
+        473
+      ],
+      [
+        473,
+        491
+      ],
+      [
+        491,
+        509
+      ],
+      [
+        509,
+        527
+      ],
+      [
+        527,
+        545
+      ],
+      [
+        545,
+        562
+      ],
+      [
+        562,
+        580
+      ],
+      [
+        580,
+        598
+      ],
+      [
+        598,
+        615
+      ],
+      [
+        615,
+        633
+      ],
+      [
+        633,
+        651
+      ],
+      [
+        651,
+        669
+      ],
+      [
+        669,
+        686
+      ],
+      [
+        686,
+        704
+      ],
+      [
+        704,
+        722
+      ],
+      [
+        722,
+        739
+      ],
+      [
+        739,
+        757
+      ],
+      [
+        757,
+        774
+      ],
+      [
+        774,
+        792
+      ],
+      [
+        792,
+        810
+      ],
+      [
+        810,
+        828
+      ],
+      [
+        828,
+        845
+      ],
+      [
+        845,
+        863
+      ],
+      [
+        863,
+        881
+      ],
+      [
+        881,
+        898
+      ]
+    ],
+    "cycle_lengths_steps": [
+      18,
+      18,
+      18,
+      19,
+      17,
+      18,
+      18,
+      17,
+      18,
+      18,
+      17,
+      19,
+      18,
+      18,
+      18,
+      18,
+      17,
+      18,
+      18,
+      17,
+      18,
+      18,
+      18,
+      17,
+      18,
+      18,
+      17,
+      18,
+      17,
+      18,
+      18,
+      18,
+      17,
+      18,
+      18,
+      17
+    ],
+    "foot_phase_summary": {
+      "BL_FOOT": {
+        "mean_phase": 0.34227248404234994,
+        "std_phase": 0.018774633833513066,
+        "count": 36
+      },
+      "BR_FOOT": {
+        "mean_phase": 0.94369911707373,
+        "std_phase": 0.0016988341233836696,
+        "count": 36
+      },
+      "ML_FOOT": {
+        "mean_phase": 0.7184955853686503,
+        "std_phase": 0.00849417061691836,
+        "count": 36
+      },
+      "MR_FOOT": {
+        "mean_phase": 0.2829664029354433,
+        "std_phase": 0.00965999391831399,
+        "count": 36
+      }
+    }
+  },
+  "files": {
+    "raw_npz": "/home/ubuntu/insectoid_mini_quad/data/extracted_gaits/model_1399_forward_y_0p30_clean/model_1399_raw_trajectory.npz",
+    "raw_csv": "/home/ubuntu/insectoid_mini_quad/data/extracted_gaits/model_1399_forward_y_0p30_clean/model_1399_raw_trajectory.csv",
+    "phase_npz": "/home/ubuntu/insectoid_mini_quad/data/extracted_gaits/model_1399_forward_y_0p30_clean/model_1399_phase_average.npz",
+    "phase_csv": "/home/ubuntu/insectoid_mini_quad/data/extracted_gaits/model_1399_forward_y_0p30_clean/model_1399_phase_average.csv"
+  }
+}

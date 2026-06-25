@@ -1,0 +1,62 @@
+{
+  "duration_s": 5.98,
+  "root_displacement_w_m": [
+    0.12516354024410248,
+    1.127198576927185,
+    0.018537312746047974
+  ],
+  "mean_world_velocity_y_mps": 0.18849474530554933,
+  "mean_root_lin_vel_b": [
+    -0.04183625429868698,
+    0.18285299837589264,
+    0.016674494370818138
+  ],
+  "mean_root_ang_vel_b_radps": [
+    0.039368949830532074,
+    0.039968349039554596,
+    -0.07669699937105179
+  ],
+  "non_foot_contact_fraction": 0.006666666666666667,
+  "non_foot_contact_steps": [
+    0,
+    1
+  ],
+  "done_steps": [],
+  "roll_mean_deg": 0.06016707047820091,
+  "roll_std_deg": 2.768463134765625,
+  "roll_min_deg": -14.779623985290527,
+  "roll_max_deg": 3.6842291355133057,
+  "roll_peak_to_peak_deg": 18.46385383605957,
+  "roll_max_abs_deg": 14.779623985290527,
+  "pitch_mean_deg": 0.8960723876953125,
+  "pitch_std_deg": 2.1590917110443115,
+  "pitch_min_deg": -4.412589073181152,
+  "pitch_max_deg": 4.467503547668457,
+  "pitch_peak_to_peak_deg": 8.88009262084961,
+  "pitch_max_abs_deg": 4.467503547668457,
+  "yaw_drift_mean_deg": -15.484466552734375,
+  "yaw_drift_std_deg": 6.714552879333496,
+  "yaw_drift_min_deg": -28.645740509033203,
+  "yaw_drift_max_deg": 0.0,
+  "yaw_drift_peak_to_peak_deg": 28.645740509033203,
+  "yaw_drift_max_abs_deg": 28.645740509033203,
+  "trajectory_npz": "/home/ubuntu/insectoid_mini_quad/data/trajectories/reversed_trajectory/model_1399_forward_canonical_capture.trajectory.npz",
+  "source": "target",
+  "reverse": true,
+  "cycle": true,
+  "playback_speed": 1.5,
+  "start_s": 2.46,
+  "end_s": 3.04,
+  "sequence_samples": 29,
+  "init_reversed_root_velocity": false,
+  "init_joint_velocity": false,
+  "root_yaw_rate_damping": 0.2,
+  "front_up_deg": -15.0,
+  "front_up_kp": 0.0,
+  "front_up_kd": 0.0,
+  "front_up_max_angvel": 1.0,
+  "bl_tibia_bias_deg": 0.0,
+  "coxa_action_scale": 1.0,
+  "femur_action_scale": 1.0,
+  "tibia_action_scale": 1.0
+}

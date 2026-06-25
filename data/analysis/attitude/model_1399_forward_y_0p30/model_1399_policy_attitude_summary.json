@@ -1,0 +1,54 @@
+{
+  "checkpoint": "/home/ubuntu/insectoid_mini_quad/trained_models/forward_strict_best/model_1399.pt",
+  "task": "Isaac-InsectoidMiniQuad-Flat-Direct-Play-v0",
+  "steps": 900,
+  "skip_steps": 250,
+  "step_dt": 0.02,
+  "duration_s": 18.0,
+  "analysis_duration_s": 13.0,
+  "command": {
+    "lateral_vel_x": 0.0,
+    "forward_vel_y": 0.3,
+    "yaw_rate_z": 0.0
+  },
+  "done_steps": [],
+  "mean_root_lin_vel_b_after_skip": [
+    0.027905918657779694,
+    0.30581462383270264,
+    0.02264486998319626
+  ],
+  "mean_root_ang_vel_b_after_skip_radps": [
+    0.002047129673883319,
+    -0.029896976426243782,
+    0.053796879947185516
+  ],
+  "rms_root_ang_vel_b_after_skip_radps": [
+    0.3264150321483612,
+    0.3506685793399811,
+    0.09150845557451248
+  ],
+  "mean_projected_gravity_b_after_skip": [
+    -0.009275700896978378,
+    0.01027248427271843,
+    -0.9998025298118591
+  ],
+  "rms_projected_gravity_xy_after_skip": 0.01987367495894432,
+  "roll_mean_deg": -0.5886971354484558,
+  "roll_std_deg": 0.5651772618293762,
+  "roll_min_deg": -2.3049397468566895,
+  "roll_max_deg": 0.5571735501289368,
+  "roll_peak_to_peak_deg": 2.8621132373809814,
+  "roll_max_abs_deg": 2.3049397468566895,
+  "pitch_mean_deg": -0.5314865112304688,
+  "pitch_std_deg": 0.5903726816177368,
+  "pitch_min_deg": -1.9528602361679077,
+  "pitch_max_deg": 1.1413559913635254,
+  "pitch_peak_to_peak_deg": 3.0942163467407227,
+  "pitch_max_abs_deg": 1.9528602361679077,
+  "yaw_drift_mean_deg": 19.245952606201172,
+  "yaw_drift_std_deg": 11.498564720153809,
+  "yaw_drift_min_deg": -0.23972320556640625,
+  "yaw_drift_max_deg": 39.470149993896484,
+  "yaw_drift_peak_to_peak_deg": 39.70987319946289,
+  "yaw_drift_max_abs_deg": 39.470149993896484
+}

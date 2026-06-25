@@ -1,0 +1,45 @@
+{
+  "label": "model_1399_refined_clean_reverse_actual_246_304_v1",
+  "type": "reversed_realized_joint_trajectory_replay",
+  "source_forward_label": "model_1399_forward_recycled_stride_v1",
+  "source_checkpoint": "/home/ubuntu/insectoid_mini_quad/trained_models/forward_strict_best/model_1399.pt",
+  "source_trajectory_npz": "/home/ubuntu/insectoid_mini_quad/data/trajectories/reversed_trajectory/model_1399_forward_canonical_capture.trajectory.npz",
+  "replay": {
+    "script": "/home/ubuntu/insectoid_mini_quad/rl/scripts/render_reversed_joint_trajectory.py",
+    "source": "actual",
+    "start_s": 2.46,
+    "end_s": 3.04,
+    "duration_s": 6.0,
+    "playback_speed": 1.0,
+    "reverse": true,
+    "cycle": true,
+    "start_from_default": true,
+    "front_up_deg": -15.0,
+    "root_yaw_rate_damping": 0.2
+  },
+  "camera": {
+    "eye": [3.8, -0.15, 2.5],
+    "lookat": [0.0, -0.45, 0.12],
+    "width": 1280,
+    "height": 720,
+    "fps": 50
+  },
+  "artifacts": {
+    "video": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_refined_clean_reverse_actual_246_304_side_iso.mp4",
+    "summary": "/home/ubuntu/insectoid_mini_quad/outputs/renders/model_1399_refined_clean_reverse_actual_246_304_side_iso.summary.json"
+  },
+  "metrics": {
+    "root_displacement_w_m": [-0.0243520587682724, -0.31305012106895447, -0.010858535766601562],
+    "mean_world_velocity_y_mps": -0.05234951857340375,
+    "mean_root_lin_vel_b": [0.0010156763019040227, -0.056922122836112976, 0.006661608349531889],
+    "roll_peak_to_peak_deg": 17.396488189697266,
+    "pitch_peak_to_peak_deg": 10.83354377746582,
+    "yaw_drift_peak_to_peak_deg": 29.069887161254883,
+    "non_foot_contact_fraction": 0.0
+  },
+  "caveats": [
+    "Action-level reversal of the cleaned primitive moved forward or stalled.",
+    "This reverse primitive is slower than the raw action tape and the external handoff reverse tape.",
+    "Use as a visualization primitive, not as a trained reverse locomotion policy."
+  ]
+}
