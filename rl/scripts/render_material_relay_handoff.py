@@ -102,9 +102,14 @@ parser.add_argument("--beam-width", type=float, default=0.28)
 parser.add_argument("--beam-height", type=float, default=0.24)
 parser.add_argument("--camera-focal-length", type=float, default=32.0)
 parser.add_argument("--no-video", action="store_true")
+parser.add_argument("--still-output", type=Path, default=None, help="Optional PNG/JPG still captured from the rendered simulation.")
+parser.add_argument("--still-time", type=float, default=None, help="Simulation time in seconds for --still-output. Defaults to overlap support.")
+parser.add_argument("--still-frame", type=int, default=None, help="Frame index for --still-output; overrides --still-time.")
+parser.add_argument("--still-only", action="store_true", help="Capture the still and summary without writing the video file.")
+parser.add_argument("--no-overlay", action="store_true", help="Write raw camera frames without text/timeline overlays.")
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
-args.enable_cameras = not args.no_video
+args.enable_cameras = (not args.no_video) or args.still_output is not None
 
 app_launcher = AppLauncher(args)
 simulation_app = app_launcher.app
@@ -118,7 +123,7 @@ from isaaclab.assets import Articulation as LabArticulation  # noqa: E402
 from isaaclab.sim import SimulationContext  # noqa: E402
 from pxr import Gf, UsdGeom  # noqa: E402
 
-if not args.no_video:
+if args.enable_cameras:
     import omni.replicator.core as rep  # noqa: E402
 else:
     rep = None
@@ -719,6 +724,8 @@ def overlay_lines_for_state(state_name: str, time_s: float) -> list[str]:
 
 
 def annotate_frame(rgb: np.ndarray, time_s: float, shot_name: str) -> np.ndarray:
+    if args.no_overlay:
+        return rgb
     if Image is None or ImageDraw is None:
         return rgb
     state, _, progress = state_at(time_s)
@@ -791,7 +798,10 @@ def main() -> None:
     robot_cfg = INSECTOID_MINI_QUAD_CFG.replace(prim_path="/World/RelayRobots/robot_.*/Robot")
     robots = LabArticulation(cfg=robot_cfg)
 
-    if not args.no_video:
+    capture_enabled = args.enable_cameras
+    write_video = (not args.no_video) and (not args.still_only)
+
+    if capture_enabled:
         if rep is None:
             raise RuntimeError("Replicator is not available; rerun with --no-video or enable camera extensions.")
         carb.settings.get_settings().set("/omni/replicator/captureOnPlay", False)
@@ -834,7 +844,7 @@ def main() -> None:
         nonlocal last_camera_shot
         state, _, _ = state_at(render_time_s)
         state_counts[state.name] += 1
-        last_camera_shot = set_replicator_camera(camera, sim, state.name, last_camera_shot) if not args.no_video else "no_video"
+        last_camera_shot = set_replicator_camera(camera, sim, state.name, last_camera_shot) if capture_enabled else "no_video"
 
         beam_xy = beam_xy_at(render_time_s)
         set_xform_pose(beam_api, beam_xy, 0.0, args.beam_z)
@@ -930,12 +940,26 @@ def main() -> None:
         sim.step(render=False)
         robots.update(sim.get_physics_dt())
 
+    still_frame_index = None
+    still_captured = False
+    if args.still_output is not None:
+        if args.still_frame is not None:
+            still_frame_index = int(np.clip(args.still_frame, 0, total_frames - 1))
+        else:
+            still_time = args.still_time
+            if still_time is None:
+                state = STATE_BY_NAME["OVERLAP_SUPPORT"]
+                still_time = 0.5 * (state.start_s + state.end_s)
+            still_frame_index = int(np.clip(round(still_time / frame_dt), 0, total_frames - 1))
+        args.still_output.parent.mkdir(parents=True, exist_ok=True)
+
     for frame_index in range(total_frames):
         time_s = frame_index * frame_dt
         shot_name = write_scene(frame_index, time_s)
-        sim.step(render=not args.no_video)
+        should_render = capture_enabled and (write_video or frame_index == still_frame_index)
+        sim.step(render=should_render)
         robots.update(sim.get_physics_dt())
-        if not args.no_video and rgb_annotator is not None:
+        if should_render and rgb_annotator is not None:
             rgb = rgb_annotator.get_data()
             if rgb is not None and getattr(rgb, "size", 0):
                 rgb = np.asarray(rgb)
@@ -945,7 +969,12 @@ def main() -> None:
                     max_value = float(np.max(rgb)) if rgb.size else 1.0
                     rgb = np.clip(rgb, 0, 255 if max_value > 1.0 else 1.0)
                     rgb = (rgb * 255.0).astype(np.uint8) if max_value <= 1.0 else rgb.astype(np.uint8)
-                frames.append(np.ascontiguousarray(annotate_frame(rgb, time_s, shot_name)))
+                annotated = np.ascontiguousarray(annotate_frame(rgb, time_s, shot_name))
+                if write_video:
+                    frames.append(annotated)
+                if still_frame_index is not None and frame_index == still_frame_index:
+                    imageio.imwrite(args.still_output, annotated)
+                    still_captured = True
 
     beam_trace_np = np.asarray(beam_trace, dtype=np.float32)
     robot_trace_np = {robot_id: np.asarray(trace, dtype=np.float32) for robot_id, trace in robot_traces.items()}
@@ -1050,12 +1079,16 @@ def main() -> None:
     }
     args.summary_output.write_text(json.dumps(summary, indent=2) + "\n")
 
-    if not args.no_video:
+    if args.still_output is not None and not still_captured:
+        raise RuntimeError(f"Still frame {still_frame_index} was not captured.")
+    if write_video:
         if not frames:
             raise RuntimeError("No frames captured.")
         args.output.parent.mkdir(parents=True, exist_ok=True)
         imageio.mimsave(args.output, frames, fps=args.fps)
         print(f"VIDEO={args.output}", flush=True)
+    if args.still_output is not None:
+        print(f"STILL={args.still_output}", flush=True)
     print(f"SUMMARY={args.summary_output}", flush=True)
     print(f"FSM_STATES={len(STATE_INFOS)} ROBOT_COUNT={len(ROBOT_SPECS)}", flush=True)
 

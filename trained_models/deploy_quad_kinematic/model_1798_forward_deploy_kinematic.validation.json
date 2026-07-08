@@ -1,0 +1,13 @@
+{
+  "action_dim": 12,
+  "action_max_abs": 0.9300378561019897,
+  "action_mean_abs": 0.46315017342567444,
+  "checkpoint": "trained_models/deploy_quad_kinematic/model_1798_forward_deploy_kinematic.pt",
+  "clipped_action_max_abs": 0.9300378561019897,
+  "clipped_action_mean_abs": 0.46315017342567444,
+  "infos_keys": [
+    "deploy_distillation"
+  ],
+  "iter": 1798,
+  "obs_dim": 60
+}

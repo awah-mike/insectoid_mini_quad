@@ -57,33 +57,51 @@ From the unpacked repo root:
 
 ```bash
 export ISAACLAB_PATH=/path/to/IsaacLab
+TERM=xterm "$ISAACLAB_PATH/isaaclab.sh" -p rl/scripts/train_rsl_rl_reset_std.py \
+  --task Isaac-InsectoidMiniQuad-GaitRefine-Direct-v0 \
+  --device cuda:0 \
+  --num_envs 4096 \
+  --resume \
+  --checkpoint trained_models/forward_strict_best/model_1399.pt \
+  --reset_action_std 0.35 \
+  --max_iterations 400 \
+  --run_name gait_refine_long_stride_v1_from_model_1399
+```
+
+The gait-refinement task keeps the same 60D observation space and 12D action
+space as the original flat task, so `model_1399.pt` is checkpoint-compatible.
+It narrows the forward command range and adds gait-quality rewards for yaw
+stability, stance anchoring, contact balance, touchdown-rate balance, cadence
+limits, longer touchdown stride, swing clearance, and a soft diagonal-pair trot
+prior.
+
+The current refinement stage is tuned for a more realistic actuator-friendly
+walk, not maximum speed. It low-pass filters action targets, lowers the command
+range to `0.20-0.28 m/s`, targets about `0.18 m` touchdown stride, penalizes
+touchdown strides below `0.08 m`, uses a `0.20 s` swing air-time target, and
+discourages per-foot touchdown cadence above about `2 Hz` with a hard rapid-step
+penalty above `3 Hz`. Once this gait looks clean in rollout videos, increase
+the command range gradually instead of training directly back at high speed.
+
+The reset-std wrapper is preferred for fine-tuning because `model_1399.pt` is
+already fairly deterministic. It reopens exploration without discarding the
+learned gait.
+
+The handoff wrapper accepts a direct checkpoint path. Stock Isaac Lab `train.py`
+normally expects `--checkpoint` to be a filename pattern under `logs/rsl_rl`;
+use the wrapper above for this package.
+
+The older baseline task remains available for comparison:
+
+```bash
 TERM=xterm "$ISAACLAB_PATH/isaaclab.sh" -p rl/scripts/train_rsl_rl.py \
   --task Isaac-InsectoidMiniQuad-Flat-Direct-v0 \
   --device cuda:0 \
   --num_envs 4096 \
   --resume \
   --checkpoint trained_models/forward_strict_best/model_1399.pt \
-  --max_iterations 300 \
-  --run_name gait_v2_from_model_1399
-```
-
-The handoff wrapper accepts a direct checkpoint path. Stock Isaac Lab `train.py`
-normally expects `--checkpoint` to be a filename pattern under `logs/rsl_rl`;
-use the wrapper above for this package.
-
-If the resumed policy is too deterministic for fine-tuning, use the reset-std
-wrapper:
-
-```bash
-TERM=xterm "$ISAACLAB_PATH/isaaclab.sh" -p rl/scripts/train_rsl_rl_reset_std.py \
-  --task Isaac-InsectoidMiniQuad-Flat-Direct-v0 \
-  --device cuda:0 \
-  --num_envs 4096 \
-  --resume \
-  --checkpoint trained_models/forward_strict_best/model_1399.pt \
-  --reset_action_std 0.35 \
-  --max_iterations 300 \
-  --run_name gait_v2_from_model_1399_reset_std
+  --max_iterations 100 \
+  --run_name flat_baseline_continue_from_model_1399
 ```
 
 ## Render A Comparison Video

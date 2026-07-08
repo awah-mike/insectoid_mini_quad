@@ -1,0 +1,42 @@
+{
+  "action_limit_loss_weight": 0.5,
+  "action_mse_after": 0.012439831160008907,
+  "action_mse_before": 0.4249732196331024,
+  "command_jitter": 0.025,
+  "epochs": 10,
+  "forward_vel": 0.3,
+  "lr": 0.0001,
+  "method": "privileged_teacher_to_deploy_observation_actor_distillation",
+  "minibatch_size": 8192,
+  "num_envs": 96,
+  "rollout_action_source": "teacher",
+  "source_checkpoint": "/home/ubuntu/insectoid_mini_quad/logs/rsl_rl/insectoid_mini_quad_gait_refine/2026-06-25_22-56-37_gait_refine_long_stride_v1_from_model_1399/model_1798.pt",
+  "steps": 1000,
+  "student_base_lin_vel_observation": "kinematic",
+  "student_noise_samples": 2,
+  "student_observation_noise_enabled": true,
+  "target_action_clip": 1.0,
+  "task": "Isaac-InsectoidMiniQuad-GaitRefineDeploy-Direct-v0",
+  "verify_clean": {
+    "mean_action_abs": 0.7836504578590393,
+    "mean_action_max_abs": 1.6731444597244263,
+    "mean_action_p95_abs": 1.1399565935134888,
+    "mean_base_height": 0.21913403272628784,
+    "mean_contact_count": 1.9494298696517944,
+    "mean_lateral_abs": 0.0938693955540657,
+    "mean_tilt": 0.06492019444704056,
+    "mean_vel_y": 0.3345569670200348,
+    "mean_yaw_abs": 0.10391400754451752
+  },
+  "verify_noisy": {
+    "mean_action_abs": 0.7829144597053528,
+    "mean_action_max_abs": 1.7003185749053955,
+    "mean_action_p95_abs": 1.1461005210876465,
+    "mean_base_height": 0.21877525746822357,
+    "mean_contact_count": 1.9586807489395142,
+    "mean_lateral_abs": 0.09548206627368927,
+    "mean_tilt": 0.06492540240287781,
+    "mean_vel_y": 0.3340931534767151,
+    "mean_yaw_abs": 0.10481417924165726
+  }
+}

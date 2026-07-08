@@ -1,0 +1,40 @@
+policy_variant: quad_test_kinematic
+model_path: models/model_2615_backward_deploy_kinematic.pt
+device: cuda:0
+policy_rate: 50.0
+cmd_vel_timeout_s: 0.5
+target_rate_limit_radps: 3.0
+command_kp: -1.0
+command_kd: -1.0
+
+action_clip: 1.0
+action_scale: 0.5
+
+base_linear_velocity_observation: kinematic_stance_feet
+base_velocity_estimator:
+  smoothing: 0.82
+  max_abs: 1.0
+  no_contact_decay: 0.98
+  zero_z: true
+
+active_joint_order:
+  - BL_coxa
+  - BR_coxa
+  - ML_coxa
+  - MR_coxa
+  - BL_femur
+  - BR_femur
+  - ML_femur
+  - MR_femur
+  - BL_tibia
+  - BR_tibia
+  - ML_tibia
+  - MR_tibia
+
+fixed_front_joints:
+  FL_coxa: 1.047198
+  FL_femur: 0.0
+  FL_tibia: 0.0
+  FR_coxa: 1.047198
+  FR_femur: 0.0
+  FR_tibia: 0.0

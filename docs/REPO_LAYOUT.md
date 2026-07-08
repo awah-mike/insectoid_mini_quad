@@ -56,6 +56,8 @@ it.
   `trained_models/forward_strict_best/model_1399.pt`
 - Canonical forward rollout:
   `outputs/training_rollouts/forward_strict_best/forward_strict_best_model_1399.mp4`
+- Current deploy-adapted quad checkpoints:
+  `trained_models/deploy_quad_kinematic/`
 - Material relay demo:
   `rl/scripts/render_material_relay_handoff.py`
 - Latest material relay render output:

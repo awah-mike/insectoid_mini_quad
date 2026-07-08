@@ -47,6 +47,8 @@ def main() -> None:
     obs = env.get_observations()
     forward_vel = []
     lateral_vel = []
+    roll_rate = []
+    pitch_rate = []
     yaw_rate = []
     tilt = []
     projected_gravity_x = []
@@ -61,6 +63,8 @@ def main() -> None:
     per_foot_contact_count = []
     per_foot_stance_speed = []
     per_foot_low_swing_speed = []
+    per_foot_low_swing_fraction = []
+    per_foot_swing_height = []
     per_foot_stride_ema = []
     per_foot_latest_touchdown_stride = []
     per_foot_touchdown_rate = []
@@ -68,6 +72,10 @@ def main() -> None:
     per_foot_completed_swing_duration = []
     touchdown_rate = []
     undesired_contact_count = []
+    bl_tibia_angle = []
+    br_tibia_angle = []
+    bl_br_tibia_offset = []
+    bl_br_tibia_abs_offset = []
     resets = 0
 
     for _ in range(args.steps):
@@ -81,11 +89,19 @@ def main() -> None:
             resets += int(torch.count_nonzero(dones).item())
             forward_vel.append(raw._robot.data.root_lin_vel_b[:, 1].detach().mean())
             lateral_vel.append(torch.abs(raw._robot.data.root_lin_vel_b[:, 0]).detach().mean())
+            roll_rate.append(torch.abs(raw._robot.data.root_ang_vel_b[:, 0]).detach().mean())
+            pitch_rate.append(torch.abs(raw._robot.data.root_ang_vel_b[:, 1]).detach().mean())
             yaw_rate.append(torch.abs(raw._robot.data.root_ang_vel_b[:, 2]).detach().mean())
             tilt.append(torch.norm(raw._robot.data.projected_gravity_b[:, :2], dim=1).detach().mean())
             projected_gravity_x.append(raw._robot.data.projected_gravity_b[:, 0].detach().mean())
             projected_gravity_y.append(raw._robot.data.projected_gravity_b[:, 1].detach().mean())
             base_height.append(raw._robot.data.root_pos_w[:, 2].detach().mean())
+            bl_tibia = raw._robot.data.joint_pos[:, raw._bl_tibia_joint_id]
+            br_tibia = raw._robot.data.joint_pos[:, raw._br_tibia_joint_id]
+            bl_tibia_angle.append(bl_tibia.detach().mean())
+            br_tibia_angle.append(br_tibia.detach().mean())
+            bl_br_tibia_offset.append((bl_tibia - br_tibia).detach().mean())
+            bl_br_tibia_abs_offset.append(torch.abs(bl_tibia - br_tibia).detach().mean())
             foot_contacts = raw._get_foot_contacts()
             forces = raw._contact_sensor.data.net_forces_w_history
             undesired_contact = torch.amax(
@@ -113,6 +129,10 @@ def main() -> None:
             )
             per_foot_low_swing_speed.append(
                 (torch.sum(foot_xy_speed * low_swing, dim=0) / (torch.sum(low_swing, dim=0) + 1.0e-6)).detach()
+            )
+            per_foot_low_swing_fraction.append(low_swing.detach().mean(dim=0))
+            per_foot_swing_height.append(
+                (torch.sum(foot_height * swing_f, dim=0) / (torch.sum(swing_f, dim=0) + 1.0e-6)).detach()
             )
             per_foot_stride_ema.append(raw._stride_length_ema.detach().mean(dim=0))
             per_foot_latest_touchdown_stride.append(raw._latest_touchdown_stride.detach().mean(dim=0))
@@ -147,6 +167,8 @@ def main() -> None:
     contact_by_foot = vector_mean(per_foot_contact_count)
     stance_speed_by_foot = vector_mean(per_foot_stance_speed)
     low_swing_speed_by_foot = vector_mean(per_foot_low_swing_speed)
+    low_swing_fraction_by_foot = vector_mean(per_foot_low_swing_fraction)
+    swing_height_by_foot = vector_mean(per_foot_swing_height)
     stride_ema_by_foot = vector_mean(per_foot_stride_ema)
     latest_stride_by_foot = vector_mean(per_foot_latest_touchdown_stride)
     touchdown_rate_by_foot = vector_mean(per_foot_touchdown_rate)
@@ -159,6 +181,8 @@ def main() -> None:
     mean_forward = mean(forward_vel)
     mean_command = args.forward_vel
     mean_lateral = mean(lateral_vel)
+    mean_roll_rate = mean(roll_rate)
+    mean_pitch_rate = mean(pitch_rate)
     mean_yaw = mean(yaw_rate)
     mean_tilt = mean(tilt)
     mean_height = mean(base_height)
@@ -211,11 +235,17 @@ def main() -> None:
         f"TASK_SCORE={task_score:.4f}",
         f"MEAN_FORWARD_VEL_Y_MPS={mean_forward:.4f}",
         f"MEAN_ABS_LATERAL_VEL_X_MPS={mean_lateral:.4f}",
+        f"MEAN_ABS_ROLL_RATE_RADPS={mean_roll_rate:.4f}",
+        f"MEAN_ABS_PITCH_RATE_RADPS={mean_pitch_rate:.4f}",
         f"MEAN_ABS_YAW_RATE_RADPS={mean_yaw:.4f}",
         f"MEAN_PROJECTED_GRAVITY_XY_NORM={mean_tilt:.4f}",
         f"MEAN_PROJECTED_GRAVITY_X={mean(projected_gravity_x):.4f}",
         f"MEAN_PROJECTED_GRAVITY_Y={mean(projected_gravity_y):.4f}",
         f"MEAN_BASE_HEIGHT_M={mean_height:.4f}",
+        f"MEAN_BL_TIBIA_RAD={mean(bl_tibia_angle):.4f}",
+        f"MEAN_BR_TIBIA_RAD={mean(br_tibia_angle):.4f}",
+        f"MEAN_BL_MINUS_BR_TIBIA_RAD={mean(bl_br_tibia_offset):.4f}",
+        f"MEAN_ABS_BL_BR_TIBIA_OFFSET_RAD={mean(bl_br_tibia_abs_offset):.4f}",
         f"MEAN_STRIDE_EMA_M={mean_stride:.4f}",
         f"MEAN_LATEST_TOUCHDOWN_STRIDE_M={mean(touchdown_stride):.4f}",
         f"MEAN_COMPLETED_STANCE_DURATION_S={mean_stance_duration:.4f}",
@@ -253,6 +283,8 @@ def main() -> None:
                 f"{foot_name}_COMPLETED_SWING_DURATION_S={swing_duration_by_foot[index].item():.4f}",
                 f"{foot_name}_STANCE_XY_SPEED_MPS={stance_speed_by_foot[index].item():.4f}",
                 f"{foot_name}_LOW_SWING_XY_SPEED_MPS={low_swing_speed_by_foot[index].item():.4f}",
+                f"{foot_name}_LOW_SWING_FRACTION={low_swing_fraction_by_foot[index].item():.4f}",
+                f"{foot_name}_SWING_HEIGHT_M={swing_height_by_foot[index].item():.4f}",
             ]
         )
     args.output.parent.mkdir(parents=True, exist_ok=True)

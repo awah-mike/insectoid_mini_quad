@@ -1,0 +1,67 @@
+{
+  "policy_variant": "quad_test_kinematic_deploy",
+  "observation_dim": 60,
+  "action_dim": 12,
+  "active_joint_order": [
+    "BL_coxa",
+    "BR_coxa",
+    "ML_coxa",
+    "MR_coxa",
+    "BL_femur",
+    "BR_femur",
+    "ML_femur",
+    "MR_femur",
+    "BL_tibia",
+    "BR_tibia",
+    "ML_tibia",
+    "MR_tibia"
+  ],
+  "front_fixed_joint_positions": {
+    "FL_coxa": 1.047198,
+    "FL_femur": 0.0,
+    "FL_tibia": 0.0,
+    "FR_coxa": 1.047198,
+    "FR_femur": 0.0,
+    "FR_tibia": 0.0
+  },
+  "action_processing": {
+    "required_raw_action_clip": [-1.0, 1.0],
+    "target_formula": "target = default_active_position + 0.5 * clipped_raw_action",
+    "output_coordinate_convention": "robot joint coordinates; do not pre-apply motor signs"
+  },
+  "observation_0_3": {
+    "source": "kinematic stance-foot base velocity estimate",
+    "uses_true_base_velocity": false,
+    "smoothing": 0.82,
+    "max_abs": 1.0,
+    "zero_z": true
+  },
+  "models": {
+    "forward": {
+      "file": "model_1798_forward_deploy_kinematic.pt",
+      "summary": "model_1798_forward_deploy_kinematic.summary.json",
+      "validation": "model_1798_forward_deploy_kinematic.validation.json",
+      "sha256": "fffc49ae918f8d8be3c825c602ed6302cd43d3a1fa7815b8b3b668a523753d2c",
+      "source_checkpoint": "model_1798.pt",
+      "nominal_command_mps": 0.3,
+      "verify_clean_mean_vel_y_mps": 0.3345569670200348,
+      "verify_noisy_mean_vel_y_mps": 0.3340931534767151,
+      "verify_noisy_action_p95_abs": 1.1461005210876465
+    },
+    "backward": {
+      "file": "model_2615_backward_deploy_kinematic.pt",
+      "summary": "model_2615_backward_deploy_kinematic.summary.json",
+      "validation": "model_2615_backward_deploy_kinematic.validation.json",
+      "sha256": "29af7eaeff0ca53b63c02ba4e5caf25f15dba7816cf8630fa1272bf15395306f",
+      "source_checkpoint": "model_2615.pt",
+      "nominal_command_mps": -0.18,
+      "verify_clean_mean_vel_y_mps": -0.10197596251964569,
+      "verify_noisy_mean_vel_y_mps": -0.10677877813577652,
+      "verify_noisy_action_p95_abs": 0.9704927206039429
+    }
+  },
+  "rollout_videos": {
+    "forward": "../../outputs/training_rollouts/deploy_obs/model_1798_deploy_distill_v3_forward_kinematic_nominal.mp4",
+    "backward": "../../outputs/training_rollouts/deploy_obs/model_2615_deploy_distill_v1_backward_kinematic_nominal.mp4"
+  }
+}

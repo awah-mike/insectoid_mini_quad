@@ -659,16 +659,20 @@ During PPO or Dr. Eureka training, watch these TensorBoard scalars:
 ```text
 Episode_Reward/track_lin_vel_xy_exp
 Episode_Reward/track_ang_vel_z_exp
+Episode_Reward/yaw_drift_l2
+Episode_Reward/lateral_velocity_l2
 Episode_Reward/flat_orientation_l2
 Episode_Reward/dof_torque_over_continuous_l2
 Episode_Reward/action_rate_l2
 Episode_Reward/dof_acc_l2
 Episode_Reward/stance_anchor_slip
-Episode_Reward/step_count_balance
+Episode_Reward/contact_balance
+Episode_Reward/diagonal_trot
+Episode_Reward/touchdown_cadence_l2
+Episode_Reward/touchdown_rate_balance
+Episode_Reward/rapid_touchdown
 Episode_Reward/touchdown_stride
 Episode_Reward/touchdown_short_stride
-Episode_Reward/stride_length_balance
-Episode_Reward/left_right_stride_balance
 Episode_Termination/base_contact_or_fall
 Episode_Termination/time_out
 Eureka/success_metric
@@ -681,7 +685,12 @@ Healthy signs:
 - `time_out` dominates `base_contact_or_fall`.
 - velocity tracking increases without `flat_orientation_l2` becoming strongly
   negative.
-- touchdown stride rises while touchdown short-stride penalty does not dominate.
+- `diagonal_trot` rises without `stance_anchor_slip` or `rapid_touchdown`
+  getting worse.
+- touchdown stride rises while touchdown short-stride and cadence penalties
+  decrease.
+- average completed stance/swing durations rise toward the configured minimums
+  instead of foot touchdown rate increasing.
 - torque-over-continuous remains a diagnostic penalty, not the largest term.
 - action-rate/joint-acc penalties do not dominate the reward.
 

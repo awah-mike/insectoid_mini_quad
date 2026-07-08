@@ -1,0 +1,43 @@
+{
+  "batch_name": "quickwin1",
+  "defaults": {
+    "task": "Isaac-InsectoidMiniQuad-GaitRefine-Direct-v0",
+    "eval_task": "Isaac-InsectoidMiniQuad-GaitRefine-Direct-Play-v0",
+    "num_envs": 4096,
+    "max_iterations": 150,
+    "seeds": [42, 123],
+    "eval_steps": 500,
+    "eval_num_envs": 16,
+    "eval_forward_vel": 0.24,
+    "render": false
+  },
+  "experiments": [
+    {
+      "id": "baseline",
+      "overrides": [],
+      "notes": "Fresh GaitRefine control run: current config, no changes."
+    },
+    {
+      "id": "obsnorm",
+      "overrides": [
+        "agent.policy.actor_obs_normalization=True",
+        "agent.policy.critic_obs_normalization=True"
+      ],
+      "notes": "Empirical observation normalization on actor and critic."
+    },
+    {
+      "id": "steps48",
+      "overrides": ["agent.num_steps_per_env=48"],
+      "notes": "Rollout horizon 48 steps (0.96 s) so GAE spans most of a gait cycle."
+    },
+    {
+      "id": "obsnorm_steps48",
+      "overrides": [
+        "agent.policy.actor_obs_normalization=True",
+        "agent.policy.critic_obs_normalization=True",
+        "agent.num_steps_per_env=48"
+      ],
+      "notes": "Both quick wins combined."
+    }
+  ]
+}

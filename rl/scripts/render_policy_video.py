@@ -42,6 +42,35 @@ parser.add_argument("--width", type=int, default=1280)
 parser.add_argument("--height", type=int, default=720)
 parser.add_argument("--camera-eye", type=parse_vec3, default=(2.4, -2.4, 2.6))
 parser.add_argument("--camera-lookat", type=parse_vec3, default=(0.0, 0.0, 0.12))
+parser.add_argument(
+    "--disable-observation-noise",
+    action="store_true",
+    help="Disable task observation noise for deterministic policy visualization.",
+)
+parser.add_argument(
+    "--base-lin-vel-observation",
+    choices=("task", "privileged", "kinematic", "zero"),
+    default="task",
+    help="Override the policy obs[0:3] source for deployment debugging.",
+)
+parser.add_argument(
+    "--post-bl-tibia-max-rad",
+    type=float,
+    default=None,
+    help="Optional rollout-only cap for BL_tibia_joint target position.",
+)
+parser.add_argument(
+    "--post-bl-tibia-br-offset-rad",
+    type=float,
+    default=None,
+    help="Optional rollout-only cap: BL_tibia_joint <= BR_tibia_joint + offset.",
+)
+parser.add_argument(
+    "--post-bl-tibia-blend",
+    type=float,
+    default=1.0,
+    help="Blend factor for optional BL tibia target correction.",
+)
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
 
@@ -68,6 +97,11 @@ def main() -> None:
     env_cfg.lin_vel_y_range = (args.forward_vel, args.forward_vel)
     env_cfg.ang_vel_z_range = (0.0, 0.0)
     env_cfg.rel_standing_envs = 0.0
+    if args.disable_observation_noise and hasattr(env_cfg, "observation_noise_enabled"):
+        env_cfg.observation_noise_enabled = False
+    if args.base_lin_vel_observation != "task":
+        env_cfg.use_privileged_base_lin_vel_obs = args.base_lin_vel_observation == "privileged"
+        env_cfg.use_foot_kinematic_base_lin_vel_obs = args.base_lin_vel_observation == "kinematic"
     if hasattr(env_cfg, "events"):
         env_cfg.events.physics_material = None
     if hasattr(env_cfg, "viewer"):
@@ -83,20 +117,45 @@ def main() -> None:
     env = RslRlVecEnvWrapper(raw_env, clip_actions=agent_cfg.clip_actions)
     runner = OnPolicyRunner(env, agent_cfg.to_dict(), log_dir=None, device=agent_cfg.device)
     print(f"[VIDEO] loading checkpoint: {args.checkpoint}", flush=True)
-    runner.load(str(args.checkpoint))
+    runner.load(str(args.checkpoint), load_optimizer=False)
     policy = runner.get_inference_policy(device=env.unwrapped.device)
     obs = env.get_observations()
+    raw = raw_env.unwrapped
+    joint_names = tuple(raw._robot.data.joint_names)
+    bl_tibia_index = joint_names.index("BL_tibia_joint")
+    br_tibia_index = joint_names.index("BR_tibia_joint")
+    action_scale = float(raw.cfg.action_scale)
+    default_joint_pos = raw._robot.data.default_joint_pos
+    post_bl_tibia_blend = max(0.0, min(1.0, args.post_bl_tibia_blend))
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     writer = imageio.get_writer(args.output, fps=args.fps)
     try:
         for step in range(args.video_length):
             with torch.inference_mode():
-                raw = raw_env.unwrapped
                 raw._commands[:, 0] = 0.0
                 raw._commands[:, 1] = args.forward_vel
                 raw._commands[:, 2] = 0.0
                 actions = policy(obs)
+                if args.post_bl_tibia_max_rad is not None or args.post_bl_tibia_br_offset_rad is not None:
+                    target = default_joint_pos + action_scale * actions
+                    bl_limit = torch.full_like(target[:, bl_tibia_index], float("inf"))
+                    if args.post_bl_tibia_max_rad is not None:
+                        bl_limit = torch.minimum(
+                            bl_limit,
+                            torch.full_like(bl_limit, args.post_bl_tibia_max_rad),
+                        )
+                    if args.post_bl_tibia_br_offset_rad is not None:
+                        bl_limit = torch.minimum(
+                            bl_limit,
+                            target[:, br_tibia_index] + args.post_bl_tibia_br_offset_rad,
+                        )
+                    corrected_bl = torch.minimum(target[:, bl_tibia_index], bl_limit)
+                    target[:, bl_tibia_index] = (
+                        (1.0 - post_bl_tibia_blend) * target[:, bl_tibia_index]
+                        + post_bl_tibia_blend * corrected_bl
+                    )
+                    actions = torch.clamp((target - default_joint_pos) / action_scale, -1.0, 1.0)
                 obs, _, _, _ = env.step(actions)
 
             frame = raw_env.render()

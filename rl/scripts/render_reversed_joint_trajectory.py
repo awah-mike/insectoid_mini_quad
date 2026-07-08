@@ -513,6 +513,7 @@ def select_window(data: np.lib.npyio.NpzFile) -> dict[str, np.ndarray]:
     selected: dict[str, np.ndarray] = {
         "time_s": time_s[indices],
         "joint_pos": data[SOURCE_KEYS[args.source]][indices].astype(np.float32),
+        "reset_joint_pos": data["actual_joint_pos"][indices].astype(np.float32),
         "actual_joint_vel": data["actual_joint_vel"][indices].astype(np.float32),
         "root_lin_vel_b": data["root_lin_vel_b"][indices].astype(np.float32),
         "root_ang_vel_b": data["root_ang_vel_b"][indices].astype(np.float32),
@@ -627,7 +628,7 @@ def main() -> None:
     initial_yaw = quat_wxyz_to_yaw(raw._robot.data.root_link_quat_w)[0].detach().clone()
 
     default_joint_pos = torch.as_tensor(default_joint_pos_np, dtype=torch.float32, device=raw.device).unsqueeze(0)
-    start_joint_pos = default_joint_pos_np if args.start_from_default else selected["joint_pos"][0]
+    start_joint_pos = default_joint_pos_np if args.start_from_default else selected["reset_joint_pos"][0]
     start_joint_vel = np.zeros_like(default_joint_pos_np) if args.start_from_default else selected["actual_joint_vel"][0]
     reset_to_start(raw, default_joint_pos, start_joint_pos, start_joint_vel)
     if args.init_reversed_root_velocity:

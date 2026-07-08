@@ -1,0 +1,42 @@
+{
+  "action_limit_loss_weight": 0.5,
+  "action_mse_after": 0.0022442403715103865,
+  "action_mse_before": 0.002442070981487632,
+  "command_jitter": 0.02,
+  "epochs": 10,
+  "forward_vel": -0.18,
+  "lr": 0.0001,
+  "method": "privileged_teacher_to_deploy_observation_actor_distillation",
+  "minibatch_size": 8192,
+  "num_envs": 96,
+  "rollout_action_source": "teacher",
+  "source_checkpoint": "/home/ubuntu/insectoid_mini_quad/logs/rsl_rl/insectoid_mini_quad_backward_bl_tibia_link_balance_v3/2026-06-27_01-32-41_bl_tibia_link_balance_v3_floor_from_2590/model_2615.pt",
+  "steps": 1000,
+  "student_base_lin_vel_observation": "kinematic",
+  "student_noise_samples": 2,
+  "student_observation_noise_enabled": true,
+  "target_action_clip": 1.0,
+  "task": "Isaac-InsectoidMiniQuad-BackwardDeploy-Direct-v0",
+  "verify_clean": {
+    "mean_action_abs": 0.5994465351104736,
+    "mean_action_max_abs": 1.2637417316436768,
+    "mean_action_p95_abs": 0.9727356433868408,
+    "mean_base_height": 0.17322014272212982,
+    "mean_contact_count": 2.8906500339508057,
+    "mean_lateral_abs": 0.048496197909116745,
+    "mean_tilt": 0.07597897201776505,
+    "mean_vel_y": -0.10197596251964569,
+    "mean_yaw_abs": 0.11083328723907471
+  },
+  "verify_noisy": {
+    "mean_action_abs": 0.5937458276748657,
+    "mean_action_max_abs": 1.2695391178131104,
+    "mean_action_p95_abs": 0.9704927206039429,
+    "mean_base_height": 0.17111435532569885,
+    "mean_contact_count": 2.8835320472717285,
+    "mean_lateral_abs": 0.05135892331600189,
+    "mean_tilt": 0.07348757982254028,
+    "mean_vel_y": -0.10677877813577652,
+    "mean_yaw_abs": 0.12257082015275955
+  }
+}

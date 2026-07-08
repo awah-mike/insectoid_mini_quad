@@ -51,9 +51,13 @@ parser.add_argument("--camera-eye", type=float, nargs=3, default=(10.0, -13.0, 9
 parser.add_argument("--camera-lookat", type=float, nargs=3, default=(0.0, 0.0, 0.15))
 parser.add_argument("--camera-focal-length", type=float, default=32.0)
 parser.add_argument("--no-video", action="store_true")
+parser.add_argument("--still-output", type=Path, default=None, help="Optional PNG/JPG still captured from the rendered simulation.")
+parser.add_argument("--still-time", type=float, default=6.4, help="Simulation time in seconds for --still-output.")
+parser.add_argument("--still-frame", type=int, default=None, help="Frame index for --still-output; overrides --still-time.")
+parser.add_argument("--still-only", action="store_true", help="Capture the still and summary without writing a video file.")
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
-args.enable_cameras = not args.no_video
+args.enable_cameras = (not args.no_video) or args.still_output is not None
 
 app_launcher = AppLauncher(args)
 simulation_app = app_launcher.app
@@ -67,7 +71,7 @@ from isaaclab.assets import Articulation as LabArticulation  # noqa: E402
 from isaaclab.sim import SimulationContext  # noqa: E402
 from pxr import Gf, UsdGeom  # noqa: E402
 
-if not args.no_video:
+if args.enable_cameras:
     import omni.replicator.core as rep  # noqa: E402
 else:
     rep = None
@@ -226,6 +230,31 @@ def add_cube(parent_path: str, name: str, size: tuple[float, float, float], colo
     xform.SetTranslate(Gf.Vec3d(*translate))
 
 
+def create_worksite_grid(parent_path: str = "/World/WorksiteMarkings") -> None:
+    UsdGeom.Xform.Define(omni.usd.get_context().get_stage(), parent_path)
+    min_x, max_x = -8.0, 8.0
+    min_y, max_y = -7.0, 7.0
+    extent_x = max_x - min_x
+    extent_y = max_y - min_y
+    z = 0.006
+    for index, x in enumerate(range(int(min_x), int(max_x) + 1)):
+        major = x % 2 == 0
+        thickness = 0.026 if major else 0.014
+        color = (0.36, 0.36, 0.34) if major else (0.27, 0.27, 0.26)
+        add_cube(parent_path, f"grid_x_{index:02d}", (thickness, extent_y, 0.004), color, (float(x), 0.0, z))
+    for index, y in enumerate(range(int(min_y), int(max_y) + 1)):
+        major = y % 2 == 0
+        thickness = 0.026 if major else 0.014
+        color = (0.36, 0.36, 0.34) if major else (0.27, 0.27, 0.26)
+        add_cube(parent_path, f"grid_y_{index:02d}", (extent_x, thickness, 0.004), color, (0.0, float(y), z))
+
+    boundary_color = (0.80, 0.66, 0.24)
+    add_cube(parent_path, "boundary_north", (extent_x, 0.05, 0.006), boundary_color, (0.0, max_y, z + 0.001))
+    add_cube(parent_path, "boundary_south", (extent_x, 0.05, 0.006), boundary_color, (0.0, min_y, z + 0.001))
+    add_cube(parent_path, "boundary_east", (0.05, extent_y, 0.006), boundary_color, (max_x, 0.0, z + 0.001))
+    add_cube(parent_path, "boundary_west", (0.05, extent_y, 0.006), boundary_color, (min_x, 0.0, z + 0.001))
+
+
 def create_payload(payload_path: str, spec: PayloadSpec) -> UsdGeom.XformCommonAPI:
     stage = omni.usd.get_context().get_stage()
     root = UsdGeom.Xform.Define(stage, payload_path)
@@ -358,6 +387,7 @@ def main() -> None:
     light_cfg.func("/World/Light", light_cfg)
     sim_utils.create_prim("/World/CarrierRobots", "Xform")
     sim_utils.create_prim("/World/Payloads", "Xform")
+    create_worksite_grid()
 
     teams = team_specs()
     payload_apis = []
@@ -384,7 +414,10 @@ def main() -> None:
     robot_cfg = INSECTOID_MINI_QUAD_CFG.replace(prim_path="/World/CarrierRobots/team_.*/robot_.*/Robot")
     robots = LabArticulation(cfg=robot_cfg)
 
-    if not args.no_video:
+    capture_enabled = args.enable_cameras
+    write_video = (not args.no_video) and (not args.still_only)
+
+    if capture_enabled:
         if rep is None:
             raise RuntimeError("Replicator is not available; rerun without --no-video only when camera extensions are loaded.")
         carb.settings.get_settings().set("/omni/replicator/captureOnPlay", False)
@@ -491,12 +524,22 @@ def main() -> None:
         sim.step(render=False)
         robots.update(sim.get_physics_dt())
 
-    for _ in range(total_frames):
+    still_frame_index = None
+    still_captured = False
+    if args.still_output is not None:
+        if args.still_frame is not None:
+            still_frame_index = int(np.clip(args.still_frame, 0, total_frames - 1))
+        else:
+            still_frame_index = int(np.clip(round(args.still_time / frame_dt), 0, total_frames - 1))
+        args.still_output.parent.mkdir(parents=True, exist_ok=True)
+
+    for frame_index in range(total_frames):
         write_scene()
-        sim.step(render=not args.no_video)
+        should_render = capture_enabled and (write_video or frame_index == still_frame_index)
+        sim.step(render=should_render)
         robots.update(sim.get_physics_dt())
 
-        if not args.no_video and rgb_annotator is not None:
+        if should_render and rgb_annotator is not None:
             rgb = rgb_annotator.get_data()
             if rgb is not None and getattr(rgb, "size", 0):
                 rgb = np.asarray(rgb)
@@ -506,7 +549,12 @@ def main() -> None:
                     max_value = float(np.max(rgb)) if rgb.size else 1.0
                     rgb = np.clip(rgb, 0, 255 if max_value > 1.0 else 1.0)
                     rgb = (rgb * 255.0).astype(np.uint8) if max_value <= 1.0 else rgb.astype(np.uint8)
-                frames.append(np.ascontiguousarray(rgb))
+                frame = np.ascontiguousarray(rgb)
+                if write_video:
+                    frames.append(frame)
+                if still_frame_index is not None and frame_index == still_frame_index:
+                    imageio.imwrite(args.still_output, frame)
+                    still_captured = True
         advance_team_state()
 
     payload_traces_np = [np.asarray(trace, dtype=np.float32) for trace in payload_traces]
@@ -566,12 +614,16 @@ def main() -> None:
     args.summary_output.parent.mkdir(parents=True, exist_ok=True)
     args.summary_output.write_text(json.dumps(summary, indent=2) + "\n")
 
-    if not args.no_video:
+    if args.still_output is not None and not still_captured:
+        raise RuntimeError(f"Still frame {still_frame_index} was not captured.")
+    if write_video:
         if not frames:
             raise RuntimeError("No frames captured.")
         args.output.parent.mkdir(parents=True, exist_ok=True)
         imageio.mimsave(args.output, frames, fps=args.fps)
         print(f"VIDEO={args.output}", flush=True)
+    if args.still_output is not None:
+        print(f"STILL={args.still_output}", flush=True)
     print(f"SUMMARY={args.summary_output}", flush=True)
     print(f"TEAM_COUNT={len(teams)} ROBOT_COUNT={len(slots)}", flush=True)
 

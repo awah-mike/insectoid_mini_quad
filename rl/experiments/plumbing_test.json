@@ -1,0 +1,25 @@
+{
+  "batch_name": "plumbing",
+  "defaults": {
+    "task": "Isaac-InsectoidMiniQuad-GaitRefine-Direct-v0",
+    "eval_task": "Isaac-InsectoidMiniQuad-GaitRefine-Direct-Play-v0",
+    "num_envs": 64,
+    "max_iterations": 3,
+    "seeds": [42],
+    "eval_steps": 50,
+    "eval_num_envs": 8,
+    "eval_forward_vel": 0.24,
+    "render": false
+  },
+  "experiments": [
+    {
+      "id": "pipe_obsnorm_steps48",
+      "overrides": [
+        "agent.policy.actor_obs_normalization=True",
+        "agent.policy.critic_obs_normalization=True",
+        "agent.num_steps_per_env=48"
+      ],
+      "notes": "Plumbing test only: verifies train, hydra overrides, checkpoint discovery, eval, ledger."
+    }
+  ]
+}

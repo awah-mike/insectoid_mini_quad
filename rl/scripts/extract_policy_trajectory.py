@@ -49,6 +49,7 @@ from rsl_rl.runners import OnPolicyRunner  # noqa: E402
 import insectoid_mini_quad_rl  # noqa: F401, E402
 from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper  # noqa: E402
 from isaaclab_tasks.utils import load_cfg_from_registry, parse_env_cfg  # noqa: E402
+from isaaclab.utils.math import quat_apply_inverse, quat_inv, quat_mul  # noqa: E402
 
 
 def _interp_rows(segment: np.ndarray, sample_count: int) -> np.ndarray:
@@ -219,6 +220,12 @@ def main() -> None:
         "target_joint_pos": [],
         "joint_pos": [],
         "joint_vel": [],
+        "foot_pos_b": [],
+        "foot_pos_w": [],
+        "body_pos_b": [],
+        "body_pos_w": [],
+        "body_quat_b": [],
+        "body_quat_w": [],
         "dones": [],
     }
 
@@ -243,6 +250,25 @@ def main() -> None:
         records["target_joint_pos"].append(raw._processed_actions[0].detach().cpu().numpy().copy())
         records["joint_pos"].append(raw._robot.data.joint_pos[0].detach().cpu().numpy().copy())
         records["joint_vel"].append(raw._robot.data.joint_vel[0].detach().cpu().numpy().copy())
+        body_pos_w = raw._robot.data.body_pos_w
+        body_quat_w = raw._robot.data.body_quat_w
+        root_quat = raw._robot.data.root_quat_w[:, None, :].expand(-1, body_pos_w.shape[1], -1)
+        body_pos_b = quat_apply_inverse(
+            root_quat.reshape(-1, 4),
+            (body_pos_w - raw._robot.data.root_pos_w[:, None, :]).reshape(-1, 3),
+        ).reshape_as(body_pos_w)
+        body_quat_b = quat_mul(
+            quat_inv(root_quat.reshape(-1, 4)),
+            body_quat_w.reshape(-1, 4),
+        ).reshape_as(body_quat_w)
+        foot_pos_w = body_pos_w[:, raw._feet_body_ids]
+        foot_pos_b = body_pos_b[:, raw._feet_body_ids]
+        records["foot_pos_b"].append(foot_pos_b[0].detach().cpu().numpy().copy())
+        records["foot_pos_w"].append(foot_pos_w[0].detach().cpu().numpy().copy())
+        records["body_pos_b"].append(body_pos_b[0].detach().cpu().numpy().copy())
+        records["body_pos_w"].append(body_pos_w[0].detach().cpu().numpy().copy())
+        records["body_quat_b"].append(body_quat_b[0].detach().cpu().numpy().copy())
+        records["body_quat_w"].append(body_quat_w[0].detach().cpu().numpy().copy())
         records["dones"].append(bool(dones[0].item()))
         if bool(dones[0].item()):
             raw.episode_length_buf.zero_()
@@ -260,6 +286,7 @@ def main() -> None:
         raw_npz_path,
         **arrays,
         joint_names=np.asarray(joint_names),
+        body_names=np.asarray(raw._robot.data.body_names),
         foot_names=np.asarray(FOOT_NAMES),
         default_joint_pos=default_joint_pos,
         action_scale=np.asarray(action_scale),
@@ -285,6 +312,12 @@ def main() -> None:
         "target_joint_pos": arrays["target_joint_pos"],
         "joint_pos": arrays["joint_pos"],
         "joint_vel": arrays["joint_vel"],
+        "foot_pos_b": arrays["foot_pos_b"].reshape(arrays["foot_pos_b"].shape[0], -1),
+        "foot_pos_w": arrays["foot_pos_w"].reshape(arrays["foot_pos_w"].shape[0], -1),
+        "body_pos_b": arrays["body_pos_b"].reshape(arrays["body_pos_b"].shape[0], -1),
+        "body_pos_w": arrays["body_pos_w"].reshape(arrays["body_pos_w"].shape[0], -1),
+        "body_quat_b": arrays["body_quat_b"].reshape(arrays["body_quat_b"].shape[0], -1),
+        "body_quat_w": arrays["body_quat_w"].reshape(arrays["body_quat_w"].shape[0], -1),
     }
     cycle_foot, averaged, cycle_summary = _extract_cycles(
         arrays["contacts"], arrays["dones"], arrays_for_cycles, args.skip_steps, args.phase_samples, args.cycle_foot
@@ -330,6 +363,7 @@ def main() -> None:
             "yaw_rate_z": args.yaw_rate,
         },
         "joint_names": list(joint_names),
+        "body_names": list(raw._robot.data.body_names),
         "foot_names": list(FOOT_NAMES),
         "default_joint_pos": default_joint_pos.tolist(),
         "action_scale": action_scale,

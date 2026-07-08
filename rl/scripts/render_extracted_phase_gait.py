@@ -34,6 +34,8 @@ parser.add_argument("--width", type=int, default=1280)
 parser.add_argument("--height", type=int, default=720)
 parser.add_argument("--cycle-time", type=float, default=None)
 parser.add_argument("--cycle-time-scale", type=float, default=1.10)
+parser.add_argument("--source", choices=("action", "target", "actual"), default="action")
+parser.add_argument("--action-filter-alpha", type=float, default=None)
 parser.add_argument("--smooth-window", type=int, default=7)
 parser.add_argument("--smooth-passes", type=int, default=2)
 parser.add_argument("--amplitude-scale", type=float, default=0.90)
@@ -59,7 +61,8 @@ import numpy as np  # noqa: E402
 import torch  # noqa: E402
 
 import insectoid_mini_quad_rl  # noqa: F401, E402
-from isaaclab_tasks.utils import parse_env_cfg  # noqa: E402
+from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper  # noqa: E402
+from isaaclab_tasks.utils import load_cfg_from_registry, parse_env_cfg  # noqa: E402
 
 
 COXA_LEFT = (0, 2)  # BL, ML in joint order
@@ -136,12 +139,18 @@ def summarize_attitude(times: np.ndarray, quats: np.ndarray, lin_vel: np.ndarray
 
 def main() -> None:
     phase_data = np.load(args.phase_npz)
-    actions = phase_data["actions_mean"].astype(np.float32)
+    summary = json.loads(args.summary_json.read_text()) if args.summary_json.is_file() else {}
+    if args.source == "action":
+        actions = phase_data["actions_mean"].astype(np.float32)
+    else:
+        key = "target_joint_pos_mean" if args.source == "target" else "joint_pos_mean"
+        default_joint_pos = np.asarray(summary["default_joint_pos"], dtype=np.float32)
+        action_scale = float(summary["action_scale"])
+        actions = (phase_data[key].astype(np.float32) - default_joint_pos[None, :]) / action_scale
     actions = circular_smooth(actions, args.smooth_window, args.smooth_passes)
     center = actions.mean(axis=0, keepdims=True)
     actions = center + args.amplitude_scale * (actions - center)
 
-    summary = json.loads(args.summary_json.read_text()) if args.summary_json.is_file() else {}
     if args.cycle_time is None:
         lengths = summary.get("cycle_summary", {}).get("cycle_lengths_steps", [])
         step_dt = float(summary.get("step_dt", 0.02))
@@ -157,16 +166,26 @@ def main() -> None:
     env_cfg.viewer.eye = tuple(args.eye)
     env_cfg.viewer.lookat = tuple(args.lookat)
     env_cfg.viewer.origin_type = "world"
+    if args.action_filter_alpha is not None and hasattr(env_cfg, "action_target_filter_alpha"):
+        env_cfg.action_target_filter_alpha = args.action_filter_alpha
     if hasattr(env_cfg, "events"):
         env_cfg.events.physics_material = None
 
-    env = gym.make(args.task, cfg=env_cfg, render_mode="rgb_array" if not args.no_video else None)
-    env.reset()
-    raw = env.unwrapped
+    agent_cfg = load_cfg_from_registry(args.task, "rsl_rl_cfg_entry_point")
+    agent_cfg.device = args.device
+
+    raw_env = gym.make(args.task, cfg=env_cfg, render_mode="rgb_array" if not args.no_video else None)
+    env = RslRlVecEnvWrapper(raw_env, clip_actions=agent_cfg.clip_actions)
+    env.get_observations()
+    raw = raw_env.unwrapped
     raw.episode_length_buf.zero_()
 
     initial_yaw = quat_wxyz_to_yaw(raw._robot.data.root_link_quat_w)[0].detach().clone()
-    frames = []
+    writer = None
+    captured_frames = 0
+    if not args.no_video:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        writer = imageio.get_writer(args.output, fps=args.fps)
     times = []
     quats = []
     lin_vel = []
@@ -177,38 +196,51 @@ def main() -> None:
     capture_every = max(1, round(1.0 / (args.fps * raw.step_dt)))
     action_tensor = torch.zeros(raw.num_envs, actions.shape[1], device=raw.device)
 
-    for step in range(total_steps):
-        phase = ((step * raw.step_dt) / cycle_time) % 1.0
-        action = interpolate_cycle(actions, phase)
-        action[list(COXA_LEFT)] += args.side_coxa_bias
-        action[list(COXA_RIGHT)] -= args.side_coxa_bias
+    try:
+        for step in range(total_steps):
+            phase = ((step * raw.step_dt) / cycle_time) % 1.0
+            action = interpolate_cycle(actions, phase)
+            action[list(COXA_LEFT)] += args.side_coxa_bias
+            action[list(COXA_RIGHT)] -= args.side_coxa_bias
 
-        yaw = quat_wxyz_to_yaw(raw._robot.data.root_link_quat_w)[0]
-        yaw_error = torch.atan2(torch.sin(yaw - initial_yaw), torch.cos(yaw - initial_yaw))
-        yaw_rate = raw._robot.data.root_ang_vel_b[0, 2]
-        feedback = args.yaw_feedback_sign * (-args.yaw_feedback_kp * yaw_error - args.yaw_rate_feedback_kd * yaw_rate)
-        feedback = torch.clamp(feedback, -args.max_yaw_feedback, args.max_yaw_feedback).item()
-        action[list(COXA_LEFT)] += feedback
-        action[list(COXA_RIGHT)] -= feedback
+            yaw = quat_wxyz_to_yaw(raw._robot.data.root_link_quat_w)[0]
+            yaw_error = torch.atan2(torch.sin(yaw - initial_yaw), torch.cos(yaw - initial_yaw))
+            yaw_rate = raw._robot.data.root_ang_vel_b[0, 2]
+            feedback = args.yaw_feedback_sign * (
+                -args.yaw_feedback_kp * yaw_error - args.yaw_rate_feedback_kd * yaw_rate
+            )
+            feedback = torch.clamp(feedback, -args.max_yaw_feedback, args.max_yaw_feedback).item()
+            action[list(COXA_LEFT)] += feedback
+            action[list(COXA_RIGHT)] -= feedback
 
-        action = np.clip(action, -1.0, 1.0)
-        action_tensor[0] = torch.as_tensor(action, dtype=torch.float32, device=raw.device)
-        with torch.inference_mode():
-            _, _, done_tensor, _ = env.step(action_tensor)
+            action = np.clip(action, -1.0, 1.0)
+            action_tensor[0] = torch.as_tensor(action, dtype=torch.float32, device=raw.device)
+            with torch.inference_mode():
+                _, _, done_tensor, _ = env.step(action_tensor)
 
-        times.append(step * raw.step_dt)
-        quats.append(raw._robot.data.root_link_quat_w[0].detach().cpu().numpy().copy())
-        lin_vel.append(raw._robot.data.root_lin_vel_b[0].detach().cpu().numpy().copy())
-        ang_vel.append(raw._robot.data.root_ang_vel_b[0].detach().cpu().numpy().copy())
-        done = bool(done_tensor[0].item())
-        dones.append(done)
-        if done:
-            raw.episode_length_buf.zero_()
+            times.append(step * raw.step_dt)
+            quats.append(raw._robot.data.root_link_quat_w[0].detach().cpu().numpy().copy())
+            lin_vel.append(raw._robot.data.root_lin_vel_b[0].detach().cpu().numpy().copy())
+            ang_vel.append(raw._robot.data.root_ang_vel_b[0].detach().cpu().numpy().copy())
+            done = bool(done_tensor[0].item())
+            dones.append(done)
+            if done:
+                raw.episode_length_buf.zero_()
 
-        if not args.no_video and (step % capture_every == 0 or step == total_steps - 1):
-            frame = env.render()
-            if frame is not None and frame.size:
-                frames.append(frame)
+            if writer is not None and (step % capture_every == 0 or step == total_steps - 1):
+                frame = raw_env.render()
+                if frame is not None and frame.size:
+                    writer.append_data(frame)
+                    captured_frames += 1
+
+            if (step + 1) % 100 == 0 or step == total_steps - 1:
+                print(
+                    f"[REPLAY] step={step + 1}/{total_steps} captured_frames={captured_frames}",
+                    flush=True,
+                )
+    finally:
+        if writer is not None:
+            writer.close()
 
     attitude = summarize_attitude(
         np.asarray(times),
@@ -220,7 +252,9 @@ def main() -> None:
     attitude.update(
         {
             "phase_npz": str(args.phase_npz),
+            "source": args.source,
             "cycle_time_s": cycle_time,
+            "action_filter_alpha": args.action_filter_alpha,
             "smooth_window": args.smooth_window,
             "smooth_passes": args.smooth_passes,
             "amplitude_scale": args.amplitude_scale,
@@ -238,10 +272,8 @@ def main() -> None:
     args.attitude_output.write_text(json.dumps(attitude, indent=2) + "\n")
 
     if not args.no_video:
-        if not frames:
+        if not captured_frames:
             raise RuntimeError("No frames captured.")
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        imageio.mimsave(args.output, frames, fps=args.fps)
         print(f"VIDEO={args.output}", flush=True)
     print(f"ATTITUDE={args.attitude_output}", flush=True)
     print(f"ROLL_P2P_DEG={attitude['roll_peak_to_peak_deg']:.3f}", flush=True)
